@@ -1,0 +1,22 @@
+- autocomplete
+- global CLI tool
+- embed wait-for-port
+- quick exec/connect
+- start workspace
+
+
+infra start postgres
+
+infra connect postgres
+
+infra kill postgres
+
+infra kill all
+
+infra project add boxes
+
+infra use boxes
+
+infra services list
+
+infra services
