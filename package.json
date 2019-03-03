@@ -5,7 +5,6 @@
   "main": "index.js",
   "dependencies": {
     "chalk": "^2.4.2",
-    "cli-columns": "^3.1.2",
     "conf": "^2.2.0",
     "lodash": "^4.17.11",
     "yargs": "^13.2.1"

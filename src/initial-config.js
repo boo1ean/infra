@@ -1,12 +1,12 @@
 module.exports = {
-	activeProject: {
-		path: '/home/kmenux/src/boxes',
-	},
-	projects: [
-		{
-			name: 'boxes',
-			path: '/home/kmenux/src/boxes',
-		},
-	],
-	initialized: true,
+    "activeProject": {
+		"name": "boxes",
+		"path": "/home/kmenux/src/boxes",
+		"servicesConfigPath": "/home/kmenux/src/boxes/boxes-infra/config.js",
+    },
+	"projects": [{
+		"name": "boxes",
+		"path": "/home/kmenux/src/boxes",
+		"servicesConfigPath": "/home/kmenux/src/boxes/boxes-infra/config.js",
+	}]
 }
