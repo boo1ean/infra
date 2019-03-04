@@ -29,8 +29,16 @@ module.exports = yargs => {
 			if (service.connect) {
 				execa.shell(`docker exec -it ${argv.service} ${service.connect}`, { stdio: 'inherit' })
 			} else {
-				execa.shell(`docker logs -t 1000 -f ${argv.service}`, { stdio: 'inherit' })
+				execa.shell(`docker logs --tail 1000 -f ${argv.service}`, { stdio: 'inherit' })
 			}
+		})
+		.command(['logs <service>', 'l <service>'], 'show service logs', _.noop, argv => {
+			const { services } = getServicesConfig()
+			const service = services[argv.service]
+			if (!service) {
+				return console.error(chalk.bgRed('Service %s not found'), argv.service)
+			}
+			execa.shell(`docker logs --tail 1000 -f ${argv.service}`, { stdio: 'inherit' })
 		})
 		.demandCommand()
 		.strict()
