@@ -2,10 +2,17 @@ const assert = require('assert')
 const Promise = require('bluebird')
 const _ = require('lodash')
 const execa = require('execa')
+const Graph = require('graph-data-structure')
+const Listr = require('listr')
+const chalk = require('chalk')
 
 const COMMAND_DELAY = 200
 
 module.exports = config => {
+	let runningContainers
+	let startedContainers = {}
+	let graph = new Graph()
+
 	return run
 
 	// -n recreate all services
@@ -15,16 +22,51 @@ module.exports = config => {
 		if (argv.n) {
 			await destroyAllContainers()
 		}
-		runningContainers = ((await shell('docker ps --format "{{.Names}}"')).stdout).split('\n')
 
-		await runService(targetService, argv.d)
+		buildDeps(null, targetService)
+		const executionQueue = graph.topologicalSort().slice(1).reverse()
+		const tasks = new Listr(executionQueue.map(title => ({
+			title,
+			task: async () => {
+				await assureOldContainerRemoved(title)
+				await runContainer(title)
+			}
+		})))
 
-		// -f --follow follow container log after execution
-		if (argv.f && !argv.d) {
-			const proc = execa.shell(`docker logs -f ${targetService}`)
-			proc.stdout.pipe(process.stdout)
-			proc.stderr.pipe(process.stderr)
+		console.log('Starting %s', chalk.bold(targetService))
+		tasks.run().catch(err => {
+			console.error(err.message)
+		})
+
+		//runningContainers = getRunningContainers()
+
+		//await runService(targetService, argv.d)
+		//console.log(executionQueue)
+
+		//// -f --follow follow container log after execution
+		//if (argv.f && !argv.d) {
+			//const proc = execa.shell(`docker logs -f ${targetService}`)
+			//proc.stdout.pipe(process.stdout)
+			//proc.stderr.pipe(process.stderr)
+		//}
+	}
+
+	function buildDeps (parent, child) {
+		graph.addEdge(parent, child)
+		const conf = config.services[child]
+
+		for (let childDep of conf.deps || []) {
+			buildDeps(child, childDep)
 		}
+		for (let childPostDep of conf.postdeps || []) {
+			graph.removeEdge(parent, child)
+			graph.addEdge(parent, childPostDep)
+			graph.addEdge(childPostDep, child)
+		}
+	}
+
+	async function getRunningContainers () {
+		return ((await shell('docker ps --format "{{.Names}}"')).stdout).split('\n')
 	}
 
 	async function destroyAllContainers () {
@@ -40,22 +82,8 @@ module.exports = config => {
 		}
 	}
 
-	async function runService (serviceName, dontRunTargetService) {
-		const conf = config.services[serviceName]
-		for (let dep of conf.deps || []) {
-			await runService(dep)
-		}
-		if (!containerExists(serviceName) && !dontRunTargetService) {
-			await assureOldContainerRemoved(serviceName)
-			await runContainer(serviceName)
-			for (let dep of conf.postdeps || []) {
-				await runService(dep)
-			}
-		}
-	}
-
 	function containerExists (name) {
-		return runningContainers.indexOf(name) !== -1
+		return runningContainers.indexOf(name) !== -1 || startedContainers[name]
 	}
 
 	async function assureOldContainerRemoved (containerName) {
@@ -67,7 +95,6 @@ module.exports = config => {
 	}
 
 	async function runContainer (containerName) {
-		console.log('run %s', containerName)
 		const conf = config.services[containerName]
 		const image = conf.image || containerName
 		const pipeline = []
@@ -79,7 +106,7 @@ module.exports = config => {
 			pipeline.push(`
 				cd ${config.projectBasePath}/${image};
 				git pull;
-				docker build --build-arg NPM_TOKEN=$NPM_TOKEN -t ${image} ${dockerfile} .;
+				docker build -t ${image} ${dockerfile} .;
 			`)
 		}
 
@@ -101,9 +128,7 @@ module.exports = config => {
 		}
 
 		const envFile = conf.envFile && `--env-file ../${image}/env` || ''
-		const links = _.uniq(
-			(conf.deps || []).concat(conf.links || [])
-		).map(link => `--link ${link}`).join(' ') || ''
+		const links = _.uniq(conf.deps || []).map(link => `--link ${link}`).join(' ') || ''
 		const cmd = conf.cmd || ''
 
 		//
@@ -121,17 +146,12 @@ module.exports = config => {
 		`)
 
 		for (let step of pipeline) {
-			try {
-				await shell(step)
-			} catch (e) {
-				console.log('\n\n\n-------------\n\n\n')
-				console.error(e.stderr)
-			}
+			await shell(step)
 		}
+		startedContainers[containerName] = true
 	}
 
 	async function shell (cmd) {
-		console.log(pretty(cmd))
 		await Promise.delay(COMMAND_DELAY)
 		return execa.shell(cmd)
 	}
