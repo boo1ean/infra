@@ -1,28 +1,42 @@
 const Conf = require('conf')
 const chalk = require('chalk')
 const _ = require('lodash')
+const execa = require('execa')
 const createRunner = require('../run-service')
 const conf = new Conf()
 
 module.exports = yargs => {
 	return yargs
 		.command(['list', 'ls'], 'list current project services', _.noop, () => {
-			const { services } = require(conf.get('activeProject.servicesConfigPath'))
+			const { services } = getServicesConfig()
 			console.log(chalk.bold(conf.get('activeProject.name')))
 			Object.keys(services).forEach(s => console.log(chalk.magenta(s)))
 		})
-		.command('start <serviceName>', 'start service', _.noop, argv => {
-			const servicesConfig = require(conf.get('activeProject.servicesConfigPath'))
+		.command(['start <service>', 's <service>'], 'start service', _.noop, argv => {
+			const servicesConfig = getServicesConfig()
 			const run = createRunner({
 				...servicesConfig,
 				projectBasePath: conf.get('activeProject.path'),
 			})
-			run(argv.serviceName, { n: true })
+			run(argv.service, { n: true })
 		})
-		.command('connect', 'connect to service', _.noop, () => {
-			console.log('connect service')
+		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, argv => {
+			const { services } = getServicesConfig()
+			const service = services[argv.service]
+			if (!service) {
+				return console.error(chalk.bgRed('Service %s not found'), argv.service)
+			}
+			if (service.connect) {
+				execa.shell(`docker exec -it ${argv.service} ${service.connect}`, { stdio: 'inherit' })
+			} else {
+				execa.shell(`docker logs -t 1000 -f ${argv.service}`, { stdio: 'inherit' })
+			}
 		})
 		.demandCommand()
 		.strict()
 		.help()
+}
+
+function getServicesConfig () {
+	return require(conf.get('activeProject.servicesConfigPath'))
 }

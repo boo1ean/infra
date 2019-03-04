@@ -17,10 +17,10 @@ if (!projects) {
 	conf.store = { ...initialConfig }
 }
 
-var argv = yargs
+yargs
 	.usage('usage: $0 <command>')
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
-	.command('service', 'manage project services', servicesCommands)
+	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
 	.command('state', 'show infra current configuration', _.noop, renderConfig)
 	.command(
