@@ -19,6 +19,7 @@ if (!projects) {
 
 yargs
 	.usage('usage: $0 <command>')
+	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
@@ -39,6 +40,14 @@ yargs
 	.strict()
 	.help()
 	.argv
+
+function useCommand (argv) {
+	const project = _.find(conf.get('projects'), { name: argv.projectName })
+	conf.set('activeProject', project)
+	console.log('Now using %s as active project', chalk.bold(project.name))
+	console.log('Project path: %s', chalk.green(project.path))
+	console.log('Services config path: %s', chalk.green(project.servicesConfigPath))
+}
 
 function renderConfig () {
 	console.log(JSON.stringify(conf.store, null, 4))
