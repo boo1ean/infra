@@ -5,6 +5,7 @@ const path = require('path')
 const chalk = require('chalk')
 const _ = require('lodash')
 const yargs = require('yargs')
+const execa = require('execa')
 const initialConfig = require('./src/initial-config')
 const projectsCommands = require('./src/commands/projects')
 const servicesCommands = require('./src/commands/services')
@@ -20,6 +21,7 @@ if (!projects) {
 yargs
 	.usage('usage: $0 <command>')
 	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
+	.command(['dev <service>'], 'start service in dev mode', _.noop, startCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
@@ -47,6 +49,11 @@ function useCommand (argv) {
 	console.log('Now using %s as active project', chalk.bold(project.name))
 	console.log('Project path: %s', chalk.green(project.path))
 	console.log('Services config path: %s', chalk.green(project.servicesConfigPath))
+}
+
+function startCommand (argv) {
+	const projectPath = conf.get('activeProject.path')
+	execa.shell(`cd ${projectPath}/${argv.service}; npm run dev`, { stdio: 'inherit' })
 }
 
 function renderConfig () {
