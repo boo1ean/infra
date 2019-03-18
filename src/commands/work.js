@@ -4,16 +4,16 @@ module.exports = () => {
 	const config = {
 		commands: [
 			{
-				path: '$HOME/src/boxes/boxes-consumer-frontend',
-				cmd: 'npm run dev',
+				path: '$HOME',
+				cmd: 'infra dev boxes-consumer-frontend',
 			},
 			{
-				path: '$HOME/src/boxes/boxes-consumer-api',
-				cmd: 'nodemon src',
+				path: '$HOME',
+				cmd: 'infra dev boxes-consumer-api',
 			},
 			{
-				path: '$HOME/src/boxes/boxes-infra',
-				cmd: 'node index.js boxes-postgres -n; docker exec -it boxes-postgres psql boxes',
+				path: '$HOME',
+				cmd: 'infra s s boxes-postgres',
 			},
 		]
 	}

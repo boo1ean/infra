@@ -3,25 +3,26 @@ const chalk = require('chalk')
 const _ = require('lodash')
 const execa = require('execa')
 const createRunner = require('../run-service')
+const utils = require('../utils')
 const conf = new Conf()
 
 module.exports = yargs => {
 	return yargs
 		.command(['list', 'ls'], 'list current project services', _.noop, () => {
-			const { services } = getServicesConfig()
+			const services = utils.getServicesConfig()
 			console.log(chalk.bold(conf.get('activeProject.name')))
 			Object.keys(services).forEach(s => console.log(chalk.magenta(s)))
 		})
 		.command(['start <service>', 's <service>'], 'start service', _.noop, argv => {
-			const servicesConfig = getServicesConfig()
+			const services = utils.getServicesConfig()
 			const run = createRunner({
-				...servicesConfig,
+				services,
 				projectBasePath: conf.get('activeProject.path'),
 			})
 			run(argv.service, { n: true })
 		})
 		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, argv => {
-			const { services } = getServicesConfig()
+			const services = utils.getServicesConfig()
 			const service = services[argv.service]
 			if (!service) {
 				return console.error(chalk.bgRed('Service %s not found'), argv.service)
@@ -33,7 +34,7 @@ module.exports = yargs => {
 			}
 		})
 		.command(['logs <service>', 'l <service>'], 'show service logs', _.noop, argv => {
-			const { services } = getServicesConfig()
+			const services = utils.getServicesConfig()
 			const service = services[argv.service]
 			if (!service) {
 				return console.error(chalk.bgRed('Service %s not found'), argv.service)
@@ -43,8 +44,4 @@ module.exports = yargs => {
 		.demandCommand()
 		.strict()
 		.help()
-}
-
-function getServicesConfig () {
-	return require(conf.get('activeProject.servicesConfigPath'))
 }

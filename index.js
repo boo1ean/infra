@@ -6,10 +6,12 @@ const chalk = require('chalk')
 const _ = require('lodash')
 const yargs = require('yargs')
 const execa = require('execa')
+const fuzzy = require('fuzzysearch')
 const initialConfig = require('./src/initial-config')
 const projectsCommands = require('./src/commands/projects')
 const servicesCommands = require('./src/commands/services')
 const workCommands = require('./src/commands/work')
+const utils = require('./src/utils')
 const conf = new Conf()
 const projects = conf.get('projects')
 
@@ -20,8 +22,9 @@ if (!projects) {
 
 yargs
 	.usage('usage: $0 <command>')
+	.coerce('service', transformServiceArgument)
 	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
-	.command(['dev <service>'], 'start service in dev mode', _.noop, startCommand)
+	.command(['dev <service>', 'd <service>'], 'start service in dev mode', _.noop, startCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
@@ -42,6 +45,14 @@ yargs
 	.strict()
 	.help()
 	.argv
+
+function transformServiceArgument (service) {
+	const services = utils.getServiceNames()
+	if (services.includes(service)) {
+		return service
+	}
+	return _.first(services.filter(fuzzy.bind(null, service)))
+}
 
 function useCommand (argv) {
 	const project = _.find(conf.get('projects'), { name: argv.projectName })

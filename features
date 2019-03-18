@@ -20,3 +20,5 @@ infra use boxes
 infra services list
 
 infra services
+
+- service name shortcuts on first letters
