@@ -26,6 +26,7 @@ yargs
 	.coerce('service', transformServiceArgument)
 	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
 	.command(['dev <service>', 'd <service>'], 'start service in dev mode', _.noop, startCommand)
+	.command(['cd [service]'], '', _.noop, cdCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
@@ -62,6 +63,11 @@ function useCommand (argv) {
 	console.log('Now using %s as active project', chalk.bold(project.name))
 	console.log('Project path: %s', chalk.green(project.path))
 	console.log('Services config path: %s', chalk.green(project.servicesConfigPath))
+}
+
+function cdCommand (argv) {
+	const projectPath = conf.get('activeProject.path')
+	execa.shell(`cd ${projectPath}/${argv.service || ''} && $SHELL`, { stdio: 'inherit' })
 }
 
 function startCommand (argv) {
