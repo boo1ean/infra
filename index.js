@@ -11,6 +11,7 @@ const initialConfig = require('./src/initial-config')
 const projectsCommands = require('./src/commands/projects')
 const servicesCommands = require('./src/commands/services')
 const workCommands = require('./src/commands/work')
+const migrationsCommands = require('./src/commands/migrations')
 const utils = require('./src/utils')
 const conf = new Conf()
 const projects = conf.get('projects')
@@ -28,6 +29,7 @@ yargs
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
+	.command(['migration <name>', 'm <name>'], 'create migration', _.noop, migrationsCommands)
 	.command('state', 'show infra current configuration', _.noop, renderConfig)
 	.command(
 		'set-value <key> <value>',
