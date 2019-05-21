@@ -26,7 +26,7 @@ yargs
 	.coerce('service', transformServiceArgument)
 	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
 	.command(['dev <service>', 'd <service>'], 'start service in dev mode', _.noop, startCommand)
-	.command(['cd [service]'], '', _.noop, cdCommand)
+	.command(['cd [service]'], 'Go to service source code directory', _.noop, cdCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command('work', 'start workspace', _.noop, workCommands)
