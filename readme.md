@@ -1,3 +1,18 @@
+## Introduction
+
+*Disclaimer:*
+
+In the scope of this document terms: `service`, `app`, `process` could be used interchangeably.
+
+`infra` is intended to be used for the development of multi-process nodejs and frontend javascript systems.
+Complete infrastructure configuration is described in `docker-compose.yml` in project root directory.
+
+Roughly speaking there are 3 types of services:
+	- nodejs app (could be some kind of api webserver or worker)
+	- frontend app ([nuxtjs](https://nuxtjs.org) apps are preffered)
+	- third-party apps (databases, queues, etc.)
+
+
 ```
 usage: infra <command>
 
