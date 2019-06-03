@@ -1,0 +1,19 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "app-controller": "^0.5.0",
+    "body-parser": "^1.18.3",
+    "chainp": "^1.0.0",
+    "express": "^4.16.4",
+    "infra-workframe": "^1.0.4",
+    "knex": "^0.16.3"
+  }
+}

@@ -3,7 +3,7 @@ const path = require('path')
 const chalk = require('chalk')
 const _ = require('lodash')
 const fs = require('fs')
-const scafolder = require('../scafolder')
+const scaffolder = require('../scaffolder')
 const conf = new Conf()
 
 module.exports = yargs => {
@@ -39,7 +39,7 @@ module.exports = yargs => {
 			}
 
 			fs.mkdirSync(projectPath)
-			scafolder.generate('docker-compose.yml', path.resolve(projectPath, 'docker-compose.yml'))
+			scaffolder.generate('docker-compose.yml', path.resolve(projectPath, 'docker-compose.yml'))
 
 			addProject({ path: projectPath })
 
