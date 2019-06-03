@@ -62,7 +62,6 @@ function useCommand (argv) {
 	conf.set('activeProject', project)
 	console.log('Now using %s as active project', chalk.bold(project.name))
 	console.log('Project path: %s', chalk.green(project.path))
-	console.log('Services config path: %s', chalk.green(project.servicesConfigPath))
 }
 
 function cdCommand (argv) {
