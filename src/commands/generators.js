@@ -24,7 +24,7 @@ const config = {
 	pg: {
 		default_user: 'root',
 		default_password: 'root',
-		default_db: 'samples',
+		default_db: 'sample',
 	}
 }
 
@@ -104,14 +104,6 @@ module.exports = yargs => {
 				console.log(chalk.green('Success!'))
 			}
 		)
-
-		.command(['workframe-api <name>', 'wf-api <name>'], 'Create workframe-powered express app in active project', _.noop, argv => {
-
-			// copy sample express api app
-			// update templates placeholders
-			// update docker-compose.yml
-
-		})
 
 		.demandCommand()
 		.strict()
