@@ -9,9 +9,9 @@ const conf = new Conf()
 module.exports = yargs => {
 	return yargs
 		.command(['list', 'ls'], 'list current project services', _.noop, () => {
-			const services = utils.getServicesConfig()
+			const services = utils.getServicesNames()
 			console.log(chalk.bold(conf.get('activeProject.name')))
-			Object.keys(services).forEach(s => console.log(chalk.magenta(s)))
+			services.forEach(s => console.log(chalk.magenta(s)))
 		})
 		.command(['start <service>', 's <service>'], 'start service', _.noop, argv => {
 			const services = utils.getServicesConfig()
