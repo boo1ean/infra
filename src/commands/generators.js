@@ -12,13 +12,20 @@ const conf = new Conf()
 
 const COMPOSE_CONFIG_VERSION = 3.7
 
+// docker-compose.yml
 const dockerComposeConfigPath = path.resolve(conf.get('activeProject.path'), 'docker-compose.yml')
-
 if (!fs.existsSync(dockerComposeConfigPath)) {
 	fs.writeFileSync(dockerComposeConfigPath, `version: "${COMPOSE_CONFIG_VERSION}"`)
 }
-
 const dockerComposeConfig = yaml.parse(fs.readFileSync(dockerComposeConfigPath).toString())
+
+// dev.docker-compose.yml
+const devDockerComposeConfigPath = path.resolve(conf.get('activeProject.path'), 'dev.docker-compose.yml')
+if (!fs.existsSync(devDockerComposeConfigPath)) {
+	fs.writeFileSync(devDockerComposeConfigPath, `version: "${COMPOSE_CONFIG_VERSION}"`)
+}
+const devDockerComposeConfig = yaml.parse(fs.readFileSync(devDockerComposeConfigPath).toString())
+
 
 const config = {
 	pg: {
@@ -52,6 +59,8 @@ module.exports = yargs => {
 			_.noop,
 			createServiceFromTemplate('express-api')
 		)
+		.alias('d', 'dep')
+		.describe('d', 'Dependency service name')
 
 		.command(
 			['api-workframe <name>', 'api-wf <name>'],
@@ -59,6 +68,8 @@ module.exports = yargs => {
 			_.noop,
 			createServiceFromTemplate('express-api-workframe')
 		)
+		.alias('d', 'dep')
+		.describe('d', 'Dependency service name')
 
 		.command(
 			['postgres [name]', 'pg [name]'],
@@ -112,6 +123,8 @@ module.exports = yargs => {
 
 function createServiceFromTemplate (templateName) {
 	return argv => {
+		console.log(argv)
+		return
 		const serviceName = `${conf.get('activeProject.name')}-${argv.name}`
 		const destPath = path.resolve(
 			conf.get('activeProject.path'),
@@ -122,18 +135,45 @@ function createServiceFromTemplate (templateName) {
 		console.log('Under path: %s', chalk.bold(destPath))
 		scaffolder.generate(templateName, destPath)
 
-		if (!dockerComposeConfig.services) {
-			dockerComposeConfig.services = {}
-		}
-		dockerComposeConfig.services[serviceName] = {
-			build: `./${serviceName}`,
-			restart: 'always',
-		}
-		writeDockerComposeConfig(dockerComposeConfig)
-		console.log('Updated docker-compose.yml')
+		updateDockerCompose()
+		updateDevDockerCompose()
 
 		console.log(chalk.green('Success!'))
+
+		function updateDockerCompose () {
+			if (!dockerComposeConfig.services) {
+				dockerComposeConfig.services = {}
+			}
+			dockerComposeConfig.services[serviceName] = {
+				build: `./${serviceName}`,
+				restart: 'always',
+			}
+			writeDockerComposeConfig(dockerComposeConfig)
+			console.log('Updated docker-compose.yml')
+		}
+
+		function updateDevDockerCompose () {
+			if (!devDockerComposeConfig.services) {
+				devDockerComposeConfig.services = {}
+			}
+			devDockerComposeConfig.services[serviceName] = {
+				build: `./${serviceName}`,
+				restart: 'always',
+			}
+			writeDockerComposeConfig(devDockerComposeConfig)
+			console.log('Updated docker-compose.yml')
+		}
 	}
+}
+
+function resolveDependenciesNames (deps) {
+	deps = Array.isArray(deps) ? deps : [deps]
+	// get list of services
+	// get matching srevice by name using regex match
+	// compose list of deps
+	// put it to compose file deps property
+	// find out if dependency has some ports to wait for
+	return deps
 }
 
 function writeDockerComposeConfig (config) {

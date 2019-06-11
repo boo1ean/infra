@@ -7,7 +7,7 @@ module.exports = {
 		client: 'postgresql',
 		connection: {
 			host:     _('PG_HOST', 'localhost'),
-			database: _('PG_DB', 'boxes'),
+			database: _('PG_DB', 'sample'),
 			user:     _('PG_USER', 'root'),
 			password: _('PG_PASSWORD', 'root')
 		},
@@ -28,8 +28,7 @@ module.exports = {
 		},
 	},
 	log: {
-		label: _('LOG_HAS_CONSOLE_TRANSPORT', 'express-api-infra'),
-		hasConsoleTransport: _('LOG_HAS_CONSOLE_TRANSPORT', true),
+		label: _('LOG_LABEL', 'express-api-workframe'),
 		level: _('LOG_LEVEL', 'debug'),
 	},
 }
