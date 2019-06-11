@@ -111,6 +111,9 @@ module.exports = yargs => {
 						volumes: [
 							`${volumeName}:/var/lib/postgresql/data`,
 						],
+						labels: {
+							'infra.connect': `psql ${config.pg.default_db} ${config.pg.default_user}`,
+						},
 					}
 
 					if (!dockerComposeConfig.volumes) {

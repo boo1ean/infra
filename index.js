@@ -56,7 +56,7 @@ function transformServiceArgument (service) {
 	if (services.includes(service)) {
 		return service
 	}
-	return _.first(services.filter(fuzzy.bind(null, service)))
+	return _.first(services.filter(fuzzy.bind(null, service))) || service
 }
 
 function useCommand (argv) {
