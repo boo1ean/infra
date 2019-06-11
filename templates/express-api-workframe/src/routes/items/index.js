@@ -11,5 +11,5 @@ const handlers = controller({
 })
 
 module.exports = router => {
-	router.get('/api/items', handlers.query)
+	router.all('*', handlers.query)
 }
