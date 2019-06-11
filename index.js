@@ -52,7 +52,7 @@ yargs
 	.argv
 
 function transformServiceArgument (service) {
-	const services = utils.getServiceNames()
+	const services = utils.getServicesNames()
 	if (services.includes(service)) {
 		return service
 	}
@@ -73,7 +73,9 @@ function cdCommand (argv) {
 
 function startCommand (argv) {
 	const projectPath = conf.get('activeProject.path')
-	execa.shell(`cd ${projectPath}/${argv.service}; npm run dev`, { stdio: 'inherit' })
+	const cmd = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run ${argv.service}`
+	console.log(cmd)
+	execa.shell(cmd, { stdio: 'inherit' })
 }
 
 function renderConfig () {
