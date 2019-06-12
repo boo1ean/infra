@@ -196,10 +196,10 @@ function createServiceFromTemplate (templateName, type, startPort) {
 			}
 
 			if (type === 'frontend') {
-				const [apiContainerName, apiServiceName] = getContainerNameByServiceType(dockerComposeConfigPath, 'api')
+				const [apiContainerName, apiServiceName] = getContainerNameByServiceType(dockerComposeConfig, 'api')
 				if (apiContainerName) {
 					dockerComposeConfig.services[serviceName].environment = {
-						API_PROXY_URL: apiContainerName,
+						API_PROXY_URL: `http://${apiContainerName}:3000`,
 					}
 					deps.push(apiServiceName)
 				}

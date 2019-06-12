@@ -71,9 +71,15 @@ function cdCommand (argv) {
 	execa.shell(`cd ${projectPath}/${argv.service || ''} && $SHELL`, { stdio: 'inherit' })
 }
 
-function startCommand (argv) {
+function startCommand ({ service }) {
 	const projectPath = conf.get('activeProject.path')
-	const cmd = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run ${argv.service}`
+	const { services } = utils.getDevDockerComposeConfig()
+	const serviceConfig = services[service]
+	if (!serviceConfig) {
+		return console.error(chalk.red('Service %s not found'), service)
+	}
+
+	const cmd = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run --service-ports --name ${serviceConfig.container_name} ${service}`
 	console.log(cmd)
 	execa.shell(cmd, { stdio: 'inherit' })
 }

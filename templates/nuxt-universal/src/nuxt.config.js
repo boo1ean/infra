@@ -1,5 +1,10 @@
 module.exports = {
 	mode: 'universal',
+	rootDir: __dirname,
+	server: {
+		host: process.env.HOST || '0.0.0.0',
+		port: process.env.PORT || 3000,
+	},
 	head: {
 		title: process.env.npm_package_name || '',
 		meta: [
