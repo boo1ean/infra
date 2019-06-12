@@ -22,7 +22,7 @@ module.exports = {
 	],
 	proxy: {
 		'/api': {
-			target: process.env.API_HOST || 'http://localhost:3005',
+			target: process.env.API_PROXY_URL || 'http://localhost:3005',
 			xfwd: true,
 		},
 	},
