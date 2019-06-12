@@ -11,7 +11,6 @@ const scaffolder = require('../scaffolder')
 const conf = new Conf()
 
 const COMPOSE_CONFIG_VERSION = 3.7
-const START_PORT = 3000
 
 const servicesTypes = {
 	POSTGRES: 'postgres',
@@ -51,19 +50,19 @@ const config = {
 module.exports = yargs => {
 	return yargs
 
-		.command(['frontend <name>', 'f <name>'], 'Create frontend app in active project', _.noop, argv => {
-			assertActiveProject()
-			// copy sample express api app
-			// update templates placeholders
-			// update docker-compose.yml
-
-		})
+		.command(
+			['frontend <name>', 'f <name>'],
+			'Create frontend app in active project',
+			_.noop,
+			createServiceFromTemplate('nuxt-universal', 'frontend', 4000))
+		.alias('d', 'dep')
+		.describe('d', 'Dependency service name')
 
 		.command(
 			['api <name>'],
 			'Create express app in active project',
 			_.noop,
-			createServiceFromTemplate('express-api')
+			createServiceFromTemplate('express-api', 'api', 3000)
 		)
 		.alias('d', 'dep')
 		.describe('d', 'Dependency service name')
@@ -72,7 +71,7 @@ module.exports = yargs => {
 			['api-workframe <name>', 'api-wf <name>'],
 			'Create workframe-powered express app in active project',
 			_.noop,
-			createServiceFromTemplate('express-api-workframe')
+			createServiceFromTemplate('express-api-workframe', 'api', 3000)
 		)
 		.alias('d', 'dep')
 		.describe('d', 'Dependency service name')
@@ -139,7 +138,10 @@ module.exports = yargs => {
 		.help()
 }
 
-function createServiceFromTemplate (templateName) {
+// test front app
+// generate webserver
+
+function createServiceFromTemplate (templateName, type, startPort) {
 	return argv => {
 		assertActiveProject()
 		const serviceName = `${conf.get('activeProject.name')}-${argv.name}`
@@ -152,12 +154,24 @@ function createServiceFromTemplate (templateName) {
 		console.log('Under path: %s', chalk.bold(destPath))
 		scaffolder.generate(templateName, destPath)
 
-		updateDockerCompose()
-		updateDevDockerCompose()
+		updateDockerCompose(dockerComposeConfig, dockerComposeConfigPath)
+		updateDockerCompose(devDockerComposeConfig, devDockerComposeConfigPath, {
+			build: {
+				context: `./${serviceName}`,
+				dockerfile: 'dev.Dockerfile',
+			},
+			volumes: [
+				`./${serviceName}/src:/app/src`,
+				'/app/node_modules',
+			],
+			ports: [
+				`${getUnusedPort(devDockerComposeConfig, startPort)}:3000`,
+			],
+		})
 
 		console.log(chalk.green('Success!'))
 
-		function updateDockerCompose () {
+		function updateDockerCompose (dockerComposeConfig, dockerComposeConfigPath, extra = {}) {
 			const deps = resolveDependenciesNames(argv.dep)
 			if (!dockerComposeConfig.services) {
 				dockerComposeConfig.services = {}
@@ -167,82 +181,54 @@ function createServiceFromTemplate (templateName) {
 				build: `./${serviceName}`,
 				restart: 'always',
 				labels: {
-					'infra.type': 'api',
+					'infra.type': type,
 				},
 			}
 
-			const postgresServiceName = getPostgresServiceName(dockerComposeConfig)
-			if (postgresServiceName) {
-				dockerComposeConfig.services[serviceName].environment = {
-					PG_HOST: postgresServiceName
+			if (type === 'api') {
+				const [postgresContainerName, postgresServiceName] = getContainerNameByServiceType(dockerComposeConfig, 'postgres')
+				if (postgresContainerName) {
+					dockerComposeConfig.services[serviceName].environment = {
+						PG_HOST: postgresContainerName
+					}
+					deps.push(postgresServiceName)
 				}
-				deps.push(postgresServiceName)
+			}
+
+			if (type === 'frontend') {
+				const [apiContainerName, apiServiceName] = getContainerNameByServiceType(dockerComposeConfigPath, 'api')
+				if (apiContainerName) {
+					dockerComposeConfig.services[serviceName].environment = {
+						API_PROXY_URL: apiContainerName,
+					}
+					deps.push(apiServiceName)
+				}
 			}
 
 			if (deps.length) {
 				dockerComposeConfig.services[serviceName].depends_on = _.uniq(deps)
 			}
 
+			dockerComposeConfig.services[serviceName] = Object.assign(dockerComposeConfig.services[serviceName], extra)
 			writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
 			console.log('Updated docker-compose.yml')
 		}
+	}
+}
 
-		function updateDevDockerCompose () {
-			const deps = resolveDependenciesNames(argv.dep)
-			if (!devDockerComposeConfig.services) {
-				devDockerComposeConfig.services = {}
-			}
-			devDockerComposeConfig.services[serviceName] = {
-				container_name: serviceName,
-				build: {
-					context: `./${serviceName}`,
-					dockerfile: 'dev.Dockerfile',
-				},
-				restart: 'always',
-				volumes: [
-					`./${serviceName}/src:/app/src`,
-					'/app/node_modules',
-				],
-				ports: [
-					`${getUnusedPort(devDockerComposeConfig)}:3000`,
-				],
-				labels: {
-					'infra.type': 'api',
-				},
-			}
-
-			const postgresServiceName = getPostgresServiceName(devDockerComposeConfig)
-			if (postgresServiceName) {
-				devDockerComposeConfig.services[serviceName].environment = {
-					PG_HOST: postgresServiceName
-				}
-				deps.push(postgresServiceName)
-			}
-
-			if (deps.length) {
-				devDockerComposeConfig.services[serviceName].depends_on = _.uniq(deps)
-			}
-
-			writeDockerComposeConfig(devDockerComposeConfigPath, devDockerComposeConfig)
-			console.log('Updated dev.docker-compose.yml')
+function getContainerNameByServiceType ({ services }, type) {
+	for (const serviceName in services) {
+		const service = services[serviceName]
+		if (_.get(service, 'labels.["infra.type"]') === type) {
+			return [service.container_name, serviceName]
 		}
 	}
+	return []
 }
 
-function getPostgresServiceName ({ services }) {
-	const pg = _.find(
-		Object.values(services),
-		s => _.get(s, 'labels.["infra.type"]') === 'postgres'
-	)
-
-	if (pg) {
-		return pg.container_name
-	}
-}
-
-function getUnusedPort (dockerComposeConfig) {
+function getUnusedPort (dockerComposeConfig, startPort) {
 	const ports = findPortsInUse(dockerComposeConfig)
-	let port = START_PORT - 1
+	let port = startPort - 1
 	while (ports.includes(++port)) {}
 	return port
 }
