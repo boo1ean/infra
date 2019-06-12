@@ -29,3 +29,16 @@ Options:
   --version  Show version number                                       [boolean]
   --help     Show help                                                 [boolean]
 ```
+
+## Types of services
+
+Types of services are defined by label `infra.type` in docker-compose config file.
+Available types are:
+
+- api
+- frontend
+- postgres
+
+Infra uses this meta information to generate some handy defaults.
+E.g. If you generate `api-workframe` and you already have postgres set service
+you will get `PG_HOST` initialized with name of postgres container.

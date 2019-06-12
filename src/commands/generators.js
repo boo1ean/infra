@@ -11,6 +11,13 @@ const scaffolder = require('../scaffolder')
 const conf = new Conf()
 
 const COMPOSE_CONFIG_VERSION = 3.7
+const START_PORT = 3000
+
+const servicesTypes = {
+	POSTGRES: 'postgres',
+	API: 'api',
+	FRONTEND: 'frontend',
+}
 
 let dockerComposeConfigPath
 let dockerComposeConfig
@@ -113,6 +120,7 @@ module.exports = yargs => {
 						],
 						labels: {
 							'infra.connect': `psql ${config.pg.default_db} ${config.pg.default_user}`,
+							'infra.type': 'postgres',
 						},
 					}
 
@@ -134,9 +142,7 @@ module.exports = yargs => {
 function createServiceFromTemplate (templateName) {
 	return argv => {
 		assertActiveProject()
-		const deps = resolveDependenciesNames(argv.dep)
 		const serviceName = `${conf.get('activeProject.name')}-${argv.name}`
-		const postgresServiceName = `${conf.get('activeProject.name')}-postgres`
 		const destPath = path.resolve(
 			conf.get('activeProject.path'),
 			serviceName
@@ -152,6 +158,7 @@ function createServiceFromTemplate (templateName) {
 		console.log(chalk.green('Success!'))
 
 		function updateDockerCompose () {
+			const deps = resolveDependenciesNames(argv.dep)
 			if (!dockerComposeConfig.services) {
 				dockerComposeConfig.services = {}
 			}
@@ -159,13 +166,21 @@ function createServiceFromTemplate (templateName) {
 				container_name: serviceName,
 				build: `./${serviceName}`,
 				restart: 'always',
-				environment: {
-					PG_HOST: postgresServiceName,
+				labels: {
+					'infra.type': 'api',
 				},
 			}
 
-			if (deps) {
-				dockerComposeConfig.services[serviceName].depends_on = deps
+			const postgresServiceName = getPostgresServiceName(dockerComposeConfig)
+			if (postgresServiceName) {
+				dockerComposeConfig.services[serviceName].environment = {
+					PG_HOST: postgresServiceName
+				}
+				deps.push(postgresServiceName)
+			}
+
+			if (deps.length) {
+				dockerComposeConfig.services[serviceName].depends_on = _.uniq(deps)
 			}
 
 			writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
@@ -173,6 +188,7 @@ function createServiceFromTemplate (templateName) {
 		}
 
 		function updateDevDockerCompose () {
+			const deps = resolveDependenciesNames(argv.dep)
 			if (!devDockerComposeConfig.services) {
 				devDockerComposeConfig.services = {}
 			}
@@ -187,20 +203,59 @@ function createServiceFromTemplate (templateName) {
 					`./${serviceName}/src:/app/src`,
 					'/app/node_modules',
 				],
-				environment: {
-					PG_HOST: postgresServiceName,
+				ports: [
+					`${getUnusedPort(devDockerComposeConfig)}:3000`,
+				],
+				labels: {
+					'infra.type': 'api',
 				},
-
 			}
 
-			if (deps) {
-				devDockerComposeConfig.services[serviceName].depends_on = deps
+			const postgresServiceName = getPostgresServiceName(devDockerComposeConfig)
+			if (postgresServiceName) {
+				devDockerComposeConfig.services[serviceName].environment = {
+					PG_HOST: postgresServiceName
+				}
+				deps.push(postgresServiceName)
+			}
+
+			if (deps.length) {
+				devDockerComposeConfig.services[serviceName].depends_on = _.uniq(deps)
 			}
 
 			writeDockerComposeConfig(devDockerComposeConfigPath, devDockerComposeConfig)
-			console.log('Updated docker-compose.yml')
+			console.log('Updated dev.docker-compose.yml')
 		}
 	}
+}
+
+function getPostgresServiceName ({ services }) {
+	const pg = _.find(
+		Object.values(services),
+		s => _.get(s, 'labels.["infra.type"]') === 'postgres'
+	)
+
+	if (pg) {
+		return pg.container_name
+	}
+}
+
+function getUnusedPort (dockerComposeConfig) {
+	const ports = findPortsInUse(dockerComposeConfig)
+	let port = START_PORT - 1
+	while (ports.includes(++port)) {}
+	return port
+}
+
+function findPortsInUse ({ services }) {
+	let portsInUse = []
+	for (const serviceName in services) {
+		const s = services[serviceName]
+		if (s.ports) {
+			portsInUse = portsInUse.concat(s.ports.map(x => _.first(x.split(':'))))
+		}
+	}
+	return portsInUse.map(Number)
 }
 
 function resolveDependenciesNames (deps) {
@@ -210,7 +265,7 @@ function resolveDependenciesNames (deps) {
 	// compose list of deps
 	// put it to compose file deps property
 	// find out if dependency has some ports to wait for
-	return deps
+	return deps.filter(Boolean)
 }
 
 function writeDockerComposeConfig (configPath, config) {
