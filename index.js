@@ -79,8 +79,7 @@ function startCommand ({ service }) {
 		return console.error(chalk.red('Service %s not found'), service)
 	}
 
-	const cmd = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run --service-ports --name ${serviceConfig.container_name} ${service}`
-	console.log(cmd)
+	const cmd = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run --service-ports --rm --name ${serviceConfig.container_name} ${service}`
 	execa.shell(cmd, { stdio: 'inherit' })
 }
 

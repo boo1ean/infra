@@ -17,8 +17,9 @@ module.exports = yargs => {
 			console.log(chalk.bold(conf.get('activeProject.name')))
 			services.forEach(s => console.log(chalk.magenta(s)))
 		})
-		.command(['start <service>', 's <service>'], 'start service', _.noop, ({ service }) => {
+		.command(['start <service>', 's <service>'], 'start service', _.noop, async ({ service }) => {
 			getServiceConfig(service)
+			await dockerComposeDown()
 			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} run -d --name ${service} ${service}`
 			execa.shell(cmd, { stdio: 'inherit' })
 		})
@@ -31,13 +32,15 @@ module.exports = yargs => {
 			getServiceConfig(service)
 			execa.shell(`docker logs --tail 1000 -f ${service}`, { stdio: 'inherit' })
 		})
-		.command(['down', 'd'], 'stop all services', _.noop, () => {
-			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} down`
-			execa.shell(cmd, { stdio: 'inherit' })
-		})
+		.command(['down', 'd'], 'stop all services', _.noop, dockerComposeDown)
 		.demandCommand()
 		.strict()
 		.help()
+}
+
+function dockerComposeDown () {
+	const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} down`
+	return execa.shell(cmd, { stdio: 'inherit' })
 }
 
 function getServiceConfig (service) {
