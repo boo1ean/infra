@@ -30,6 +30,14 @@ Options:
   --help     Show help                                                 [boolean]
 ```
 
+## Service specification
+
+- Each service has `Dockerfile` and `dev.Dockerfile` in root folder
+- All sources are stored under `src` folder
+- `package.json`, dockerfiles and other similar configs placed in root folder
+- `npm run dev` is configured to launch service in development mode with various watchers
+- `npm run prod` is configured to launch service in prod mode
+
 ## Types of services
 
 Types of services are defined by label `infra.type` in docker-compose config file.
