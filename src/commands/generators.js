@@ -23,19 +23,24 @@ let dockerComposeConfig
 let devDockerComposeConfigPath
 let devDockerComposeConfig
 if (conf.get('activeProject.path')) {
-	// docker-compose.yml
-	dockerComposeConfigPath = path.resolve(conf.get('activeProject.path'), 'docker-compose.yml')
-	if (!fs.existsSync(dockerComposeConfigPath)) {
-		fs.writeFileSync(dockerComposeConfigPath, `version: "${COMPOSE_CONFIG_VERSION}"`)
-	}
-	dockerComposeConfig = yaml.parse(fs.readFileSync(dockerComposeConfigPath).toString())
+	try {
+		// docker-compose.yml
+		dockerComposeConfigPath = path.resolve(conf.get('activeProject.path'), 'docker-compose.yml')
+		if (!fs.existsSync(dockerComposeConfigPath)) {
+			fs.writeFileSync(dockerComposeConfigPath, `version: "${COMPOSE_CONFIG_VERSION}"`)
+		}
+		dockerComposeConfig = yaml.parse(fs.readFileSync(dockerComposeConfigPath).toString())
 
-	// dev.docker-compose.yml
-	devDockerComposeConfigPath = path.resolve(conf.get('activeProject.path'), 'dev.docker-compose.yml')
-	if (!fs.existsSync(devDockerComposeConfigPath)) {
-		fs.writeFileSync(devDockerComposeConfigPath, `version: "${COMPOSE_CONFIG_VERSION}"`)
+		// dev.docker-compose.yml
+		devDockerComposeConfigPath = path.resolve(conf.get('activeProject.path'), 'dev.docker-compose.yml')
+		if (!fs.existsSync(devDockerComposeConfigPath)) {
+			fs.writeFileSync(devDockerComposeConfigPath, `version: "${COMPOSE_CONFIG_VERSION}"`)
+		}
+		devDockerComposeConfig = yaml.parse(fs.readFileSync(devDockerComposeConfigPath).toString())
+	} catch (e) {
+		console.error(e)
+		return
 	}
-	devDockerComposeConfig = yaml.parse(fs.readFileSync(devDockerComposeConfigPath).toString())
 }
 
 
