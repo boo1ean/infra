@@ -5,7 +5,7 @@
   "author": "infra",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon src/server/index.js --watch server",
+    "dev": "cross-env NODE_ENV=development nodemon --exitcrash src/server/index.js --watch server",
     "build": "nuxt build",
     "start": "cross-env NODE_ENV=production node src/server/index.js",
     "generate": "nuxt generate"
