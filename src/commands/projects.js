@@ -40,6 +40,7 @@ module.exports = yargs => {
 
 			fs.mkdirSync(projectPath)
 			scaffolder.generate('docker-compose.yml', path.resolve(projectPath, 'docker-compose.yml'))
+			scaffolder.generate('gitignore', path.resolve(projectPath, '.gitignore'))
 
 			addProject({ path: projectPath })
 
