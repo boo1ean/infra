@@ -4,8 +4,8 @@
 
 In the scope of this document terms:
 
-	- `service`, `app`, `process` could be used interchangeably and mean single process service (e.g. nodejs app, postgres, etc)
-	- `system` and `project` could be used interchangeably and mean project as a whole
+- `service`, `app`, `process` could be used interchangeably and mean single process service (e.g. nodejs app, postgres, etc)
+- `system` and `project` could be used interchangeably and mean project as a whole
 
 `infra` is intended to be used for the development of multi-process nodejs and frontend javascript systems.
 Complete infrastructure configuration is described in `{dev.}docker-compose.yml` in project root directory.
