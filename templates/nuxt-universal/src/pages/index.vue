@@ -8,13 +8,18 @@
 			<h2 class="subtitle">
 				infra frontend template
 			</h2>
-			<div v-for="i in items">
+			<div v-for="i in items" class="list-item">
 				Item from backend: {{i}}
 			</div>
 		</div>
 	</div>
 </template>
-
+<style lang="scss" scoped>
+@import '../assets/scss/variables';
+.list-item {
+	color: $color-main;
+}
+</style>
 <script>
 import Logo from '~/components/Logo.vue'
 
