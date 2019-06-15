@@ -83,7 +83,7 @@ async function startCommand ({ service }) {
 	await execa.shell(buildCommand, { stdio: 'inherit' })
 
 	const downCommand = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml down`
-	await execa.shell(buildCommand, { stdio: 'inherit' })
+	await execa.shell(downCommand, { stdio: 'inherit' })
 
 	const runCommand = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run --service-ports --rm --name ${serviceConfig.container_name} ${service}`
 	await execa.shell(runCommand, { stdio: 'inherit' })
