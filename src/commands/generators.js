@@ -14,6 +14,7 @@ const COMPOSE_CONFIG_VERSION = 3.7
 
 const servicesTypes = {
 	POSTGRES: 'postgres',
+	MONGO: 'mongo',
 	API: 'api',
 	FRONTEND: 'frontend',
 }
@@ -125,6 +126,58 @@ module.exports = yargs => {
 						labels: {
 							'infra.connect': `psql ${config.pg.default_db} ${config.pg.default_user}`,
 							'infra.type': 'postgres',
+						},
+					}
+
+					if (!dockerComposeConfig.volumes) {
+						dockerComposeConfig.volumes = {}
+					}
+					dockerComposeConfig.volumes[volumeName] = { driver: 'local' }
+					writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
+				}
+
+			}
+		)
+
+		.command(
+			['mongo [name]'],
+			'Create mongo service in active project',
+			_.noop,
+			argv => {
+				assertActiveProject()
+				const name = argv.name || 'mongo'
+				const serviceName = `${conf.get('activeProject.name')}-${name}`
+				const destPath = path.resolve(
+					conf.get('activeProject.path'),
+					serviceName
+				)
+
+				console.log('Generating service: %s', chalk.bold(serviceName))
+				console.log('Under path: %s', chalk.bold(destPath))
+				scaffolder.generate('mongo', destPath)
+
+				const volumeName = `${serviceName}-data`
+
+				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig)
+				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig)
+
+				console.log('Updated docker-compose.yml')
+				console.log(chalk.green('Success!'))
+
+				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig) {
+					if (!dockerComposeConfig.services) {
+						dockerComposeConfig.services = {}
+					}
+					dockerComposeConfig.services[serviceName] = {
+						container_name: serviceName,
+						build: `./${serviceName}`,
+						restart: 'always',
+						volumes: [
+							`${volumeName}:/data/db`,
+						],
+						labels: {
+							'infra.connect': 'mongo',
+							'infra.type': servicesTypes.MONGO,
 						},
 					}
 
