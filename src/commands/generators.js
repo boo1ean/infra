@@ -17,6 +17,7 @@ const servicesTypes = {
 	MONGO: 'mongo',
 	API: 'api',
 	FRONTEND: 'frontend',
+	WORKER: 'worker',
 }
 
 let dockerComposeConfigPath
@@ -57,12 +58,14 @@ module.exports = yargs => {
 	return yargs
 
 		.command(
-			['frontend <name>', 'f <name>'],
+			['frontend <name>', 'front <name>', 'f <name>'],
 			'Create frontend app in active project',
 			_.noop,
 			createServiceFromTemplate('nuxt-universal', 'frontend', 4000))
 		.alias('d', 'dep')
 		.describe('d', 'Dependency service name')
+		.alias('s', 'shared')
+		.describe('s', 'Use shared codebase')
 
 		.command(
 			['api <name>'],
@@ -72,6 +75,8 @@ module.exports = yargs => {
 		)
 		.alias('d', 'dep')
 		.describe('d', 'Dependency service name')
+		.alias('s', 'shared')
+		.describe('s', 'Use shared codebase')
 
 		.command(
 			['api-workframe <name>', 'api-wf <name>'],
@@ -81,6 +86,19 @@ module.exports = yargs => {
 		)
 		.alias('d', 'dep')
 		.describe('d', 'Dependency service name')
+		.alias('s', 'shared')
+		.describe('s', 'Use shared codebase')
+
+		.command(
+			['node <name>', 'node <name>', 'бандит <name>'],
+			'Create node app in active project',
+			_.noop,
+			createServiceFromTemplate('node', 'worker')
+		)
+		.alias('d', 'dep')
+		.describe('d', 'Dependency service name')
+		.alias('s', 'shared')
+		.describe('s', 'Use shared codebase')
 
 		.command(
 			['postgres [name]', 'pg [name]'],
@@ -210,39 +228,73 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 		console.log('Generating service: %s', chalk.bold(serviceName))
 		console.log('Under path: %s', chalk.bold(destPath))
-		scaffolder.generate(templateName, destPath)
+
+		const templateParams = {
+			serviceName,
+		}
+
+		let devVolumes = [
+			`./${serviceName}/src:/app/src`,
+			'/app/node_modules',
+		]
+
+		// Process shared folders option
+		if (argv.shared) {
+			const shared = Array.isArray(argv.shared) ? argv.shared : [argv.shared]
+			for (const sharedDirectory of shared) {
+				if (!fs.existsSync(path.resolve(conf.get('activeProject.path'), sharedDirectory))) {
+					console.error(
+						chalk.red('Directory %s doesn\'t exist and can\'t be shared'),
+						chalk.bold(argv.sharedDirectory)
+					)
+					process.exit(-1)
+				}
+			}
+			devVolumes = devVolumes.concat(
+				shared.map(sharedDirectory => `./${sharedDirectory}:/app/src/${sharedDirectory}`)
+			)
+			templateParams.shared = shared
+		}
+
+		scaffolder.generate(templateName, destPath, templateParams)
+
+
+		const devExtra = {
+			build: {
+				context: `./`,
+				dockerfile: `${serviceName}/dev.Dockerfile`,
+			},
+			volumes: devVolumes,
+		}
+		if (startPort) {
+			devExtra.ports = [`${getUnusedPort(devDockerComposeConfig, startPort)}:3000`]
+		}
 
 		updateDockerCompose(dockerComposeConfig, dockerComposeConfigPath)
-		updateDockerCompose(devDockerComposeConfig, devDockerComposeConfigPath, {
-			build: {
-				context: `./${serviceName}`,
-				dockerfile: 'dev.Dockerfile',
-			},
-			volumes: [
-				`./${serviceName}/src:/app/src`,
-				'/app/node_modules',
-			],
-			ports: [
-				`${getUnusedPort(devDockerComposeConfig, startPort)}:3000`,
-			],
-		})
+		updateDockerCompose(devDockerComposeConfig, devDockerComposeConfigPath, devExtra)
 
 		console.log(chalk.green('Success!'))
 
 		function updateDockerCompose (dockerComposeConfig, dockerComposeConfigPath, extra = {}) {
 			const deps = resolveDependenciesNames(argv.dep)
+
 			if (!dockerComposeConfig.services) {
 				dockerComposeConfig.services = {}
 			}
+
 			dockerComposeConfig.services[serviceName] = {
 				container_name: serviceName,
-				build: `./${serviceName}`,
+				build: {
+					context: `./${serviceName}`,
+					dockerfile: `./${serviceName}/${path.basename(dockerComposeConfigPath)}`,
+				},
 				restart: 'always',
 				labels: {
 					'infra.type': type,
 				},
 			}
 
+			// TODO refactor to flag and template on depth dependency
 			if (type === 'api') {
 				const [postgresContainerName, postgresServiceName] = getContainerNameByServiceType(dockerComposeConfig, 'postgres')
 				if (postgresContainerName) {
@@ -253,6 +305,7 @@ function createServiceFromTemplate (templateName, type, startPort) {
 				}
 			}
 
+			// TODO refactor to flag and template on depth dependency
 			if (type === 'frontend') {
 				const [apiContainerName, apiServiceName] = getContainerNameByServiceType(dockerComposeConfig, 'api')
 				if (apiContainerName) {
@@ -267,7 +320,11 @@ function createServiceFromTemplate (templateName, type, startPort) {
 				dockerComposeConfig.services[serviceName].depends_on = _.uniq(deps)
 			}
 
-			dockerComposeConfig.services[serviceName] = Object.assign(dockerComposeConfig.services[serviceName], extra)
+			dockerComposeConfig.services[serviceName] = Object.assign(
+				dockerComposeConfig.services[serviceName],
+				extra
+			)
+
 			writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
 			console.log('Updated docker-compose.yml')
 		}

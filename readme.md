@@ -33,6 +33,16 @@ Infra uses this meta information to generate some handy defaults.
 E.g. If you generate `api-workframe` and you already have postgres set service
 you will get `PG_HOST` initialized with name of postgres container.
 
+## Shared codebase
+
+Shared codebase folders used to share code between different services 
+and implemented as:
+
+- symlinks + volumes in `dev` mode
+- folder copy in `prod` mode
+
+shared folders are not services and don't have dockerfiles and entries in docker-compose configs.
+
 ```
 usage: index.js <command>
 
