@@ -1,0 +1,16 @@
+FROM node:12.3.1
+{{#each sharedDirectories}}
+
+WORKDIR /{{this}}
+COPY {{this}}/package-lock.json package-lock.json
+COPY {{this}}/package.json package.json
+RUN npm install
+
+{{/each}}
+WORKDIR /app
+COPY {{serviceName}}/package-lock.json package-lock.json
+COPY {{serviceName}}/package.json package.json
+RUN npm install
+
+expose 3000
+CMD ["npm", "run", "dev"]
