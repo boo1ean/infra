@@ -63,12 +63,6 @@ module.exports = yargs => {
 			'Create frontend app in active project',
 			_.noop,
 			createServiceFromTemplate('nuxt-universal', 'frontend', 4000))
-		.alias('d', 'dep')
-		.describe('d', 'Dependency service name')
-		.alias('s', 'shared')
-		.describe('s', 'Use shared codebase')
-		.alias('b', 'barebone')
-		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['api <name>'],
@@ -76,12 +70,6 @@ module.exports = yargs => {
 			_.noop,
 			createServiceFromTemplate('express-api', 'api', 3000)
 		)
-		.alias('d', 'dep')
-		.describe('d', 'Dependency service name')
-		.alias('s', 'shared')
-		.describe('s', 'Use shared codebase')
-		.alias('b', 'barebone')
-		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['api-workframe <name>', 'api-wf <name>'],
@@ -89,12 +77,6 @@ module.exports = yargs => {
 			_.noop,
 			createServiceFromTemplate('express-api-workframe', 'api', 3000)
 		)
-		.alias('d', 'dep')
-		.describe('d', 'Dependency service name')
-		.alias('s', 'shared')
-		.describe('s', 'Use shared codebase')
-		.alias('b', 'barebone')
-		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['node <name>', 'n <name>', 'бандит <name>'],
@@ -102,12 +84,6 @@ module.exports = yargs => {
 			_.noop,
 			createServiceFromTemplate('node', 'worker')
 		)
-		.alias('d', 'dep')
-		.describe('d', 'Dependency service name')
-		.alias('s', 'shared')
-		.describe('s', 'Use shared codebase')
-		.alias('b', 'barebone')
-		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['postgres [name]', 'pg [name]'],
@@ -122,25 +98,40 @@ module.exports = yargs => {
 					serviceName
 				)
 
+				const templateParams = {
+					serviceName,
+					sharedDirectories: [],
+					bareboneOnly: argv.barebone,
+				}
+
 				console.log('Generating service: %s', chalk.bold(serviceName))
 				console.log('Under path: %s', chalk.bold(destPath))
-				scaffolder.generate('postgres', destPath)
+				scaffolder.generate('postgres', destPath, templateParams)
 
 				const volumeName = `${serviceName}-data`
 
-				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig)
-				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig)
+				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig, {
+					build: {
+						context: `./`,
+						dockerfile: `${serviceName}/Dockerfile`,
+					},
+				})
+				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig, {
+					build: {
+						context: `./`,
+						dockerfile: `${serviceName}/dev.Dockerfile`,
+					},
+				})
 
 				console.log('Updated docker-compose.yml')
 				console.log(chalk.green('Success!'))
 
-				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig) {
+				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig, extra = {}) {
 					if (!dockerComposeConfig.services) {
 						dockerComposeConfig.services = {}
 					}
 					dockerComposeConfig.services[serviceName] = {
 						container_name: serviceName,
-						build: `./${serviceName}`,
 						restart: 'always',
 						environment: {
 							POSTGRES_USER: config.pg.default_user,
@@ -160,6 +151,10 @@ module.exports = yargs => {
 						dockerComposeConfig.volumes = {}
 					}
 					dockerComposeConfig.volumes[volumeName] = { driver: 'local' }
+					dockerComposeConfig.services[serviceName] = Object.assign(
+						dockerComposeConfig.services[serviceName],
+						extra
+					)
 					writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
 				}
 
@@ -179,25 +174,40 @@ module.exports = yargs => {
 					serviceName
 				)
 
+				const templateParams = {
+					serviceName,
+					sharedDirectories: [],
+					bareboneOnly: argv.barebone,
+				}
+
 				console.log('Generating service: %s', chalk.bold(serviceName))
 				console.log('Under path: %s', chalk.bold(destPath))
-				scaffolder.generate('mongo', destPath)
+				scaffolder.generate('mongo', destPath, templateParams)
 
 				const volumeName = `${serviceName}-data`
 
-				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig)
-				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig)
+				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig, {
+					build: {
+						context: `./`,
+						dockerfile: `${serviceName}/Dockerfile`,
+					},
+				})
+				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig, {
+					build: {
+						context: `./`,
+						dockerfile: `${serviceName}/dev.Dockerfile`,
+					},
+				})
 
 				console.log('Updated docker-compose.yml')
 				console.log(chalk.green('Success!'))
 
-				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig) {
+				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig, extra) {
 					if (!dockerComposeConfig.services) {
 						dockerComposeConfig.services = {}
 					}
 					dockerComposeConfig.services[serviceName] = {
 						container_name: serviceName,
-						build: `./${serviceName}`,
 						restart: 'always',
 						volumes: [
 							`${volumeName}:/data/db`,
@@ -212,11 +222,22 @@ module.exports = yargs => {
 						dockerComposeConfig.volumes = {}
 					}
 					dockerComposeConfig.volumes[volumeName] = { driver: 'local' }
+					dockerComposeConfig.services[serviceName] = Object.assign(
+						dockerComposeConfig.services[serviceName],
+						extra
+					)
 					writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
 				}
 
 			}
 		)
+
+		.alias('d', 'dep')
+		.describe('d', 'Dependency service name')
+		.alias('s', 'shared')
+		.describe('s', 'Use shared codebase')
+		.alias('b', 'barebone')
+		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.demandCommand()
 		.strict()

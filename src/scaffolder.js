@@ -20,7 +20,7 @@ function generate (templateName, destPath, templateParams = {}) {
 		process.exit(-1)
 	}
 
-	if (fs.existsSync(destPath)) {
+	if (fs.existsSync(destPath) && !templateParams.bareboneOnly) {
 		console.error(
 			chalk.red('Destination target %s already exists'),
 			chalk.bold(destPath)
@@ -69,7 +69,7 @@ function generate (templateName, destPath, templateParams = {}) {
 		const result = hb.compile(fs.readFileSync(templateFilePath).toString())(templateParams)
 
 		fs.writeFileSync(templateFilePath, result)
-		fsExtra.moveSync(templateFilePath, templateFilePath.slice(0, -4))
+		fsExtra.moveSync(templateFilePath, templateFilePath.slice(0, -4), { overwrite: true })
 		console.log('Template %s evaluated', chalk.bold(templateFilePath))
 	}
 
