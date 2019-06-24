@@ -35,11 +35,16 @@ you will get `PG_HOST` initialized with name of postgres container.
 
 ## Shared codebase
 
-Shared codebase folders used to share code between different services 
+Shared codebase directories used to share code between different services 
 and implemented as:
 
 - symlinks + volumes in `dev` mode
-- folder copy in `prod` mode
+- symlink + directory copy in `prod` mode
+
+it works like this:
+
+- create symlink to shared directory in target service `src` directory
+- update dockerfiles to copy shared files and install it's dependencies
 
 shared folders are not services and don't have dockerfiles and entries in docker-compose configs.
 
