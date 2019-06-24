@@ -259,7 +259,12 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 		scaffolder.generate(templateName, destPath, templateParams)
 
-
+		const prodExtra = {
+			build: {
+				context: `./`,
+				dockerfile: `${serviceName}/Dockerfile`,
+			},
+		}
 		const devExtra = {
 			build: {
 				context: `./`,
@@ -271,7 +276,7 @@ function createServiceFromTemplate (templateName, type, startPort) {
 			devExtra.ports = [`${getUnusedPort(devDockerComposeConfig, startPort)}:3000`]
 		}
 
-		updateDockerCompose(dockerComposeConfig, dockerComposeConfigPath)
+		updateDockerCompose(dockerComposeConfig, dockerComposeConfigPath, prodExtra)
 		updateDockerCompose(devDockerComposeConfig, devDockerComposeConfigPath, devExtra)
 
 		console.log(chalk.green('Success!'))
@@ -285,10 +290,6 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 			dockerComposeConfig.services[serviceName] = {
 				container_name: serviceName,
-				build: {
-					context: `./${serviceName}`,
-					dockerfile: `./${serviceName}/${path.basename(dockerComposeConfigPath)}`,
-				},
 				restart: 'always',
 				labels: {
 					'infra.type': type,
