@@ -1,4 +1,5 @@
 const fs = require('fs')
+const fsExtra = require('fs-extra')
 const path = require('path')
 const Conf = require('conf')
 const chalk = require('chalk')
@@ -66,6 +67,8 @@ module.exports = yargs => {
 		.describe('d', 'Dependency service name')
 		.alias('s', 'shared')
 		.describe('s', 'Use shared codebase')
+		.alias('b', 'barebone')
+		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['api <name>'],
@@ -77,6 +80,8 @@ module.exports = yargs => {
 		.describe('d', 'Dependency service name')
 		.alias('s', 'shared')
 		.describe('s', 'Use shared codebase')
+		.alias('b', 'barebone')
+		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['api-workframe <name>', 'api-wf <name>'],
@@ -88,6 +93,8 @@ module.exports = yargs => {
 		.describe('d', 'Dependency service name')
 		.alias('s', 'shared')
 		.describe('s', 'Use shared codebase')
+		.alias('b', 'barebone')
+		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['node <name>', 'n <name>', 'бандит <name>'],
@@ -99,6 +106,8 @@ module.exports = yargs => {
 		.describe('d', 'Dependency service name')
 		.alias('s', 'shared')
 		.describe('s', 'Use shared codebase')
+		.alias('b', 'barebone')
+		.describe('b', 'Barebone-only (dockerfiles + docker-compose changes + links)')
 
 		.command(
 			['postgres [name]', 'pg [name]'],
@@ -220,6 +229,7 @@ module.exports = yargs => {
 function createServiceFromTemplate (templateName, type, startPort) {
 	return argv => {
 		assertActiveProject()
+
 		const serviceName = `${conf.get('activeProject.name')}-${argv.name}`
 		const destPath = path.resolve(
 			conf.get('activeProject.path'),
@@ -232,6 +242,7 @@ function createServiceFromTemplate (templateName, type, startPort) {
 		const templateParams = {
 			serviceName,
 			sharedDirectories: [],
+			bareboneOnly: argv.barebone,
 		}
 
 		let devVolumes = [
@@ -332,6 +343,8 @@ function createServiceFromTemplate (templateName, type, startPort) {
 		}
 	}
 }
+
+
 
 function getContainerNameByServiceType ({ services }, type) {
 	for (const serviceName in services) {

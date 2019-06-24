@@ -28,7 +28,13 @@ function generate (templateName, destPath, templateParams = {}) {
 		process.exit(-1)
 	}
 
-	fsExtra.copySync(templatePath, destPath)
+	if (templateParams.bareboneOnly) {
+		fsExtra.ensureDirSync(`${destPath}/src`)
+		fsExtra.copySync(`${templatePath}/Dockerfile.hbs`, `${destPath}/Dockerfile.hbs`)
+		fsExtra.copySync(`${templatePath}/dev.Dockerfile.hbs`, `${destPath}/dev.Dockerfile.hbs`)
+	} else {
+		fsExtra.copySync(templatePath, destPath)
+	}
 
 	if (templateParams.sharedDirectories) {
 		console.log(chalk.bold('\n--- Link shared directories ---'))
