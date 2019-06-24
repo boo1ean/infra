@@ -8,7 +8,7 @@ const hb = require('handlebars')
 
 const templatesBasePath = path.resolve(__dirname, '..', 'templates')
 
-function generate (templateName, destPath, templateParams) {
+function generate (templateName, destPath, templateParams = {}) {
 	const templatePath = path.resolve(templatesBasePath, templateName)
 
 	if (!fs.existsSync(templatePath)) {
@@ -30,16 +30,16 @@ function generate (templateName, destPath, templateParams) {
 
 	fsExtra.copySync(templatePath, destPath)
 
-	if (templateParams.shared) {
+	if (templateParams.sharedDirectories) {
 		console.log(chalk.bold('\n--- Link shared directories ---'))
 		const parentDir = path.dirname(destPath)
-		for (const sharedDirectory of templateParams.shared) {
+		for (const sharedDirectory of templateParams.sharedDirectories) {
 
-			const source = path.resolve(parentDir, sharedDirectory)
+			const source = path.resolve(parentDir, sharedDirectory, 'src')
 			const dest = path.resolve(destPath, 'src', sharedDirectory)
 
 			fsExtra.ensureSymlinkSync(
-				source,
+				path.relative(path.dirname(dest), source),
 				dest,
 			)
 

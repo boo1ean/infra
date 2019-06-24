@@ -90,7 +90,7 @@ module.exports = yargs => {
 		.describe('s', 'Use shared codebase')
 
 		.command(
-			['node <name>', 'node <name>', 'бандит <name>'],
+			['node <name>', 'n <name>', 'бандит <name>'],
 			'Create node app in active project',
 			_.noop,
 			createServiceFromTemplate('node', 'worker')
@@ -231,6 +231,7 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 		const templateParams = {
 			serviceName,
+			sharedDirectories: [],
 		}
 
 		let devVolumes = [
@@ -249,11 +250,11 @@ function createServiceFromTemplate (templateName, type, startPort) {
 					)
 					process.exit(-1)
 				}
+				devVolumes.push(`./${sharedDirectory}:/${sharedDirectory}`)
+				devVolumes.push(`/${sharedDirectory}/node_modules`)
 			}
-			devVolumes = devVolumes.concat(
-				shared.map(sharedDirectory => `./${sharedDirectory}:/app/src/${sharedDirectory}`)
-			)
-			templateParams.shared = shared
+
+			templateParams.sharedDirectories = shared
 		}
 
 		scaffolder.generate(templateName, destPath, templateParams)
