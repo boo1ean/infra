@@ -61,6 +61,12 @@ function transformServiceArgument (service) {
 
 function useCommand (argv) {
 	const project = _.find(conf.get('projects'), { name: argv.projectName })
+
+	if (!project) {
+		console.error(chalk.red('Project %s doesn\'t exist'), chalk.bold(argv.projectName))
+		process.exit(1)
+	}
+
 	conf.set('activeProject', project)
 	console.log('Now using %s as active project', chalk.bold(project.name))
 	console.log('Project path: %s', chalk.green(project.path))
