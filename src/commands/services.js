@@ -19,7 +19,12 @@ module.exports = yargs => {
 		})
 		.command(['start <service>', 's <service>'], 'start service', _.noop, async ({ service }) => {
 			getServiceConfig(service)
-			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} run -d --service-ports --rm --name ${service} ${service}`
+			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} up --build -d ${service}`
+			execa.shell(cmd, { stdio: 'inherit' })
+		})
+		.command(['restart <service>', 'r <service>'], 'restart service', _.noop, async ({ service }) => {
+			getServiceConfig(service)
+			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} restart ${service}`
 			execa.shell(cmd, { stdio: 'inherit' })
 		})
 		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, ({ service }) => {
