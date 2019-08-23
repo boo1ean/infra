@@ -13,6 +13,7 @@ COPY {{serviceName}}/package-lock.json package-lock.json
 COPY {{serviceName}}/package.json package.json
 RUN npm install --production --quiet --depth=0
 COPY {{serviceName}}/src /app/src
+RUN npm run build
 
 EXPOSE 3000
 CMD ["npm", "run", "prod"]
