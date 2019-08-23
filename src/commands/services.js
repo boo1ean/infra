@@ -34,7 +34,7 @@ module.exports = yargs => {
 		})
 		.command(['logs <service>', 'l <service>'], 'show service logs', _.noop, ({ service }) => {
 			getServiceConfig(service)
-			execa.shell(`docker-compose logs --tail 1000 -f ${service}`, { stdio: 'inherit' })
+			execa.shell(`docker logs --tail 1000 -f ${service}`, { stdio: 'inherit' })
 		})
 		.command(['down', 'd'], 'stop all services', _.noop, dockerComposeDown)
 		.demandCommand()
