@@ -14,4 +14,4 @@ COPY {{serviceName}}/package.json package.json
 RUN npm install --production --quiet --depth=0
 COPY {{serviceName}}/src /app/src
 
-CMD ["node", "/app/src"]
+CMD ["npm", "run", "prod"]

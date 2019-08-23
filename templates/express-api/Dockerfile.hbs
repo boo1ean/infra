@@ -15,4 +15,4 @@ RUN npm install --production --quiet --depth=0
 COPY {{serviceName}}/src /app/src
 
 EXPOSE 3000
-CMD ["node", "/app/src"]
+CMD ["npm", "run", "prod"]
