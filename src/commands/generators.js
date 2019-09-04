@@ -86,6 +86,29 @@ module.exports = yargs => {
 		)
 
 		.command(
+			['shared <name>', 's <name>', 'шареный <name>'],
+			'Create shared code directory',
+			_.noop,
+			argv => {
+				const serviceName = argv.name || 'shared'
+				const destPath = path.resolve(
+					conf.get('activeProject.path'),
+					serviceName
+				)
+				const templateParams = {
+					serviceName,
+					sharedDirectories: [],
+					bareboneOnly: argv.barebone,
+				}
+
+				console.log('Generating shared directory: %s', chalk.bold(serviceName))
+				console.log('Under path: %s', chalk.bold(destPath))
+				scaffolder.generate('shared-code', destPath, templateParams)
+				console.log(chalk.green('Success!'))
+			}
+		)
+
+		.command(
 			['postgres [name]', 'pg [name]'],
 			'Create postgres service in active project',
 			_.noop,
