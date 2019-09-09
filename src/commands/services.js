@@ -6,7 +6,7 @@ const createRunner = require('../run-service')
 const utils = require('../utils')
 const conf = new Conf()
 
-const composeConfigFileName = 'dev.docker-compose.yml'
+let composeConfigFileName = 'dev.docker-compose.yml'
 if (['prod', 'production'].includes(process.env.NODE_ENV)) {
 	composeConfigFileName = 'docker-compose.yml'
 }
