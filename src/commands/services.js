@@ -6,10 +6,7 @@ const createRunner = require('../run-service')
 const utils = require('../utils')
 const conf = new Conf()
 
-let composeConfigFileName = 'dev.docker-compose.yml'
-if (['prod', 'production'].includes(process.env.NODE_ENV)) {
-	composeConfigFileName = 'docker-compose.yml'
-}
+const composeConfigFileName = utils.getComposeFilename()
 const projectPath = conf.get('activeProject.path')
 
 module.exports = yargs => {

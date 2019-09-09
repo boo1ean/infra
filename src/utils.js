@@ -28,8 +28,15 @@ function getDevDockerComposeConfig () {
 function getCurrentEnvDockerComposeConfig () {
 	return readYaml(path.resolve(
 		conf.get('activeProject.path'),
-		currentEnvDockerComposeFileName,
+		getComposeFilename(),
 	))
+}
+
+function getComposeFilename () {
+	if (['prod', 'production'].includes(process.env.NODE_ENV)) {
+		return 'docker-compose.yml'
+	}
+	return 'dev.docker-compose.yml'
 }
 
 function readYaml (path) {
@@ -41,4 +48,5 @@ module.exports = {
 	getDevDockerComposeConfig,
 	getServicesNames,
 	getCurrentEnvDockerComposeConfig,
+	getComposeFilename,
 }
