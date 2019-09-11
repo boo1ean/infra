@@ -9,7 +9,7 @@ const envPrefix = process.env.NODE_ENV || ''
 const currentEnvDockerComposeFileName = [envPrefix, 'docker-compose.yml'].join('.')
 
 function getServicesNames () {
-	return Object.keys(getDockerComposeConfig().services)
+	return Object.keys(getCurrentEnvDockerComposeConfig().services)
 }
 
 function getDockerComposeConfig () {
