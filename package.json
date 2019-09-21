@@ -1,8 +1,8 @@
 {
   "name": "infra",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "bin/index.js",
   "dependencies": {
     "bluebird": "^3.5.3",
     "chalk": "^2.4.2",

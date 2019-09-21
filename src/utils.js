@@ -5,9 +5,6 @@ const fs = require('fs')
 
 const conf = new Conf()
 
-const envPrefix = process.env.NODE_ENV || ''
-const currentEnvDockerComposeFileName = [envPrefix, 'docker-compose.yml'].join('.')
-
 function getServicesNames () {
 	return Object.keys(getCurrentEnvDockerComposeConfig().services)
 }

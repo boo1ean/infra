@@ -17,23 +17,20 @@ module.exports = yargs => {
 			services.forEach(s => console.log(chalk.magenta(s)))
 		})
 		.command(['start <service>', 's <service>'], 'start service', _.noop, async ({ service }) => {
-			getServiceConfig(service)
 			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} up --build -d ${service}`
 			execa.shell(cmd, { stdio: 'inherit' })
 		})
 		.command(['restart <service>', 'r <service>'], 'restart service', _.noop, async ({ service }) => {
-			getServiceConfig(service)
 			const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} restart ${service}`
 			execa.shell(cmd, { stdio: 'inherit' })
 		})
 		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, ({ service }) => {
 			const serviceConfig = getServiceConfig(service)
 			const connectCommand = _.get(serviceConfig, 'labels.["infra.connect"]', 'bash')
-			execa.shell(`docker exec -it ${service} ${connectCommand}`, { stdio: 'inherit' })
+			execa.shell(`cd ${projectPath} && docker-compose exec ${service} ${connectCommand}`, { stdio: 'inherit' })
 		})
 		.command(['logs <service>', 'l <service>'], 'show service logs', _.noop, ({ service }) => {
-			getServiceConfig(service)
-			execa.shell(`docker logs --tail 1000 -f ${service}`, { stdio: 'inherit' })
+			execa.shell(`cd ${projectPath} && docker-compose logs --tail 1000 -f ${service}`, { stdio: 'inherit' })
 		})
 		.command(['down', 'd'], 'stop all services', _.noop, dockerComposeDown)
 		.demandCommand()

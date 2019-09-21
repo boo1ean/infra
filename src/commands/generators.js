@@ -115,7 +115,7 @@ module.exports = yargs => {
 			argv => {
 				assertActiveProject()
 				const name = argv.name || 'postgres'
-				const serviceName = `${conf.get('activeProject.name')}-${name}`
+				const serviceName = name
 				const destPath = path.resolve(
 					conf.get('activeProject.path'),
 					serviceName
@@ -154,7 +154,6 @@ module.exports = yargs => {
 						dockerComposeConfig.services = {}
 					}
 					dockerComposeConfig.services[serviceName] = {
-						container_name: serviceName,
 						restart: 'always',
 						environment: {
 							POSTGRES_USER: config.pg.default_user,
@@ -191,7 +190,7 @@ module.exports = yargs => {
 			argv => {
 				assertActiveProject()
 				const name = argv.name || 'mongo'
-				const serviceName = `${conf.get('activeProject.name')}-${name}`
+				const serviceName = name
 				const destPath = path.resolve(
 					conf.get('activeProject.path'),
 					serviceName
@@ -230,7 +229,6 @@ module.exports = yargs => {
 						dockerComposeConfig.services = {}
 					}
 					dockerComposeConfig.services[serviceName] = {
-						container_name: serviceName,
 						restart: 'always',
 						volumes: [
 							`${volumeName}:/data/db`,
@@ -274,7 +272,7 @@ function createServiceFromTemplate (templateName, type, startPort) {
 	return argv => {
 		assertActiveProject()
 
-		const serviceName = `${conf.get('activeProject.name')}-${argv.name}`
+		const serviceName = argv.name
 		const destPath = path.resolve(
 			conf.get('activeProject.path'),
 			serviceName
@@ -344,7 +342,6 @@ function createServiceFromTemplate (templateName, type, startPort) {
 			}
 
 			dockerComposeConfig.services[serviceName] = {
-				container_name: serviceName,
 				restart: 'always',
 				labels: {
 					'infra.type': type,
@@ -353,10 +350,10 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 			// TODO refactor to flag and template on depth dependency
 			if (type === 'api') {
-				const [postgresContainerName, postgresServiceName] = getContainerNameByServiceType(dockerComposeConfig, 'postgres')
-				if (postgresContainerName) {
+				const postgresServiceName = getServiceByType(dockerComposeConfig, 'postgres')
+				if (postgresServiceName) {
 					dockerComposeConfig.services[serviceName].environment = {
-						PG_HOST: postgresContainerName
+						PG_HOST: postgresServiceName,
 					}
 					deps.push(postgresServiceName)
 				}
@@ -364,10 +361,10 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 			// TODO refactor to flag and template on depth dependency
 			if (type === 'frontend') {
-				const [apiContainerName, apiServiceName] = getContainerNameByServiceType(dockerComposeConfig, 'api')
-				if (apiContainerName) {
+				const apiServiceName = getServiceByType(dockerComposeConfig, 'api')
+				if (apiServiceName) {
 					dockerComposeConfig.services[serviceName].environment = {
-						API_PROXY_URL: `http://${apiContainerName}:3000`,
+						API_PROXY_URL: `http://${apiServiceName}:3000`,
 					}
 					deps.push(apiServiceName)
 				}
@@ -390,11 +387,11 @@ function createServiceFromTemplate (templateName, type, startPort) {
 
 
 
-function getContainerNameByServiceType ({ services }, type) {
+function getServiceByType ({ services }, type) {
 	for (const serviceName in services) {
 		const service = services[serviceName]
 		if (_.get(service, 'labels.["infra.type"]') === type) {
-			return [service.container_name, serviceName]
+			return serviceName
 		}
 	}
 	return []
