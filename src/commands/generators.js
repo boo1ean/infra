@@ -394,7 +394,7 @@ function getServiceByType ({ services }, type) {
 			return serviceName
 		}
 	}
-	return []
+	return null
 }
 
 function getUnusedPort (dockerComposeConfig, startPort) {
