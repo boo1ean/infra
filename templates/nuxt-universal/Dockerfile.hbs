@@ -9,9 +9,9 @@ COPY {{this}}/src src
 
 {{/each}}
 WORKDIR /app
-COPY {{serviceName}}/package-lock.json package-lock.json
+COPY {{serviceName}}/yarn.lock yarn.lock
 COPY {{serviceName}}/package.json package.json
-RUN npm install --production --quiet --depth=0
+RUN yarn
 COPY {{serviceName}}/src /app/src
 RUN npm run build
 

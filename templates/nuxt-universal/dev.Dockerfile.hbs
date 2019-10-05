@@ -8,9 +8,9 @@ RUN npm install
 
 {{/each}}
 WORKDIR /app
-COPY {{serviceName}}/package-lock.json package-lock.json
+COPY {{serviceName}}/yarn.lock yarn.lock
 COPY {{serviceName}}/package.json package.json
-RUN npm install
+RUN yarn
 
 expose 3000
 CMD ["npm", "run", "dev"]
