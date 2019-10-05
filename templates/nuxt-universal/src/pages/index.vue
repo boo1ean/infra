@@ -8,7 +8,7 @@
 			<h2 class="subtitle">
 				infra frontend template
 			</h2>
-			<div v-for="i in items" class="list-item">
+			<div v-for="i in items" class="list-item" :key="i">
 				Item from backend: {{i}}
 			</div>
 		</div>
@@ -28,7 +28,14 @@ export default {
 		Logo,
 	},
 	async asyncData ({ $axios }) {
-		const res = await $axios.get('/api/items')
+		try {
+			const res = await $axios.get('/api/items')
+		} catch (e) {
+			return {
+				items: ['this', 'is', 'not', 'from', 'api'],
+			}
+		}
+
 		return {
 			items: res.data,
 		}

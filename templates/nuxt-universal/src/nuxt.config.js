@@ -17,11 +17,12 @@ module.exports = {
 		]
 	},
 	loading: { color: '#fff' },
-	css: [],
+	css: [
+		'~/assets/scss/index.scss',
+	],
 	plugins: [],
 	modules: [
 		'@nuxtjs/proxy',
-		'bootstrap-vue/nuxt',
 		'@nuxtjs/axios',
 		'@nuxtjs/pwa',
 	],
