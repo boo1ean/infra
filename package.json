@@ -13,6 +13,7 @@
     "fuzzysearch": "^1.0.3",
     "graph-data-structure": "^1.8.0",
     "handlebars": "^4.4.2",
+    "inquirer": "^7.0.0",
     "listr": "^0.14.3",
     "lodash": "^4.17.15",
     "yaml": "^1.6.0",

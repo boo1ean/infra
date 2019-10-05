@@ -2,7 +2,6 @@ const Conf = require('conf')
 const chalk = require('chalk')
 const _ = require('lodash')
 const execa = require('execa')
-const createRunner = require('../run-service')
 const utils = require('../utils')
 const conf = new Conf()
 

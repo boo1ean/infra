@@ -65,12 +65,16 @@ function generate (templateName, destPath, templateParams = {}) {
 		console.log(chalk.bold('\n--- Evaluate templates ---\n'))
 	}
 	for (const templateFile of templateFiles) {
-		const templateFilePath = path.resolve(destPath, templateFile)
-		const result = hb.compile(fs.readFileSync(templateFilePath).toString())(templateParams)
+		try {
+			const templateFilePath = path.resolve(destPath, templateFile)
+			const result = hb.compile(fs.readFileSync(templateFilePath).toString())(templateParams)
 
-		fs.writeFileSync(templateFilePath, result)
-		fsExtra.moveSync(templateFilePath, templateFilePath.slice(0, -4), { overwrite: true })
-		console.log('Template %s evaluated', chalk.bold(templateFilePath))
+			fs.writeFileSync(templateFilePath, result)
+			fsExtra.moveSync(templateFilePath, templateFilePath.slice(0, -4), { overwrite: true })
+			console.log('Template %s evaluated', chalk.bold(templateFilePath))
+		} catch (e) {
+			console.error(chalk.red('Issue with template: %s'), chalk.bold(templateFile))
+		}
 	}
 
 	console.log(chalk.bold('\n--- Scaffolding finished ---\n'))

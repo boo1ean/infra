@@ -1,13 +1,9 @@
 const fs = require('fs')
-const fsExtra = require('fs-extra')
 const path = require('path')
 const Conf = require('conf')
 const chalk = require('chalk')
 const _ = require('lodash')
-const execa = require('execa')
 const yaml = require('yaml')
-const createRunner = require('../run-service')
-const utils = require('../utils')
 const scaffolder = require('../scaffolder')
 const conf = new Conf()
 

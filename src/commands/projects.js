@@ -3,6 +3,7 @@ const path = require('path')
 const chalk = require('chalk')
 const _ = require('lodash')
 const fs = require('fs')
+const inquirer = require('inquirer')
 const scaffolder = require('../scaffolder')
 const conf = new Conf()
 
@@ -47,6 +48,20 @@ module.exports = yargs => {
 			console.log('Now using %s as active project', chalk.bold(project.name))
 			console.log('Project path: %s', chalk.green(project.path))
 
+		})
+		.command(['reset'], 'remove all project services and clear docker compose configs', _.noop, argv => {
+			inquirer
+				.prompt({
+					type: 'confirm',
+					message: 'Delete all services and clear all configs of current project',
+					name: 'shouldReset',
+					default: false,
+				})
+				.then(({ shouldReset }) => {
+					if (shouldReset) {
+
+					}
+				});
 		})
 		.demandCommand()
 		.strict()
