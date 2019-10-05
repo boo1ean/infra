@@ -66,8 +66,8 @@ module.exports = yargs => {
 					if (shouldReset) {
 						for (const serviceDirectoryPath of servicesPaths) {
 							await execa.shell(`rm -rf ${serviceDirectoryPath}`)
-							fs.writeFileSync(path.resolve(activeProjectPath, 'dev.docker-compose.yml'), 'version: 3.7')
-							fs.writeFileSync(path.resolve(activeProjectPath, 'docker-compose.yml'), 'version: 3.7')
+							fs.writeFileSync(path.resolve(activeProjectPath, 'dev.docker-compose.yml'), 'version: "3.7"')
+							fs.writeFileSync(path.resolve(activeProjectPath, 'docker-compose.yml'), 'version: "3.7"')
 						}
 					}
 				});
