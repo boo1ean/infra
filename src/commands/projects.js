@@ -4,6 +4,8 @@ const chalk = require('chalk')
 const _ = require('lodash')
 const fs = require('fs')
 const inquirer = require('inquirer')
+const execa = require('execa')
+const utils = require('../utils')
 const scaffolder = require('../scaffolder')
 const conf = new Conf()
 
@@ -50,16 +52,23 @@ module.exports = yargs => {
 
 		})
 		.command(['reset'], 'remove all project services and clear docker compose configs', _.noop, argv => {
+			const activeProjectPath = conf.get('activeProject.path')
+			const servicesPaths = utils.getServicesNames().map(n => path.resolve(activeProjectPath, n))
+			const message = `The following directories will be deleted:\n\n${servicesPaths.join('\n')}\n\nAnd docker-compose configs will be cleared`
 			inquirer
 				.prompt({
 					type: 'confirm',
-					message: 'Delete all services and clear all configs of current project',
+					message,
 					name: 'shouldReset',
 					default: false,
 				})
-				.then(({ shouldReset }) => {
+				.then(async ({ shouldReset }) => {
 					if (shouldReset) {
-
+						for (const serviceDirectoryPath of servicesPaths) {
+							await execa.shell(`rm -rf ${serviceDirectoryPath}`)
+							fs.writeFileSync(path.resolve(activeProjectPath, 'dev.docker-compose.yml'), 'version: 3.7')
+							fs.writeFileSync(path.resolve(activeProjectPath, 'docker-compose.yml'), 'version: 3.7')
+						}
 					}
 				});
 		})
