@@ -6,7 +6,7 @@ const fs = require('fs')
 const conf = new Conf()
 
 function getServicesNames () {
-	return Object.keys(getCurrentEnvDockerComposeConfig().services)
+	return Object.keys(getCurrentEnvDockerComposeConfig().services || {})
 }
 
 function getDockerComposeConfig () {

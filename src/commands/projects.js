@@ -52,9 +52,14 @@ module.exports = yargs => {
 
 		})
 		.command(['reset'], 'remove all project services and clear docker compose configs', _.noop, argv => {
+			const projectName = conf.get('activeProject.name')
 			const activeProjectPath = conf.get('activeProject.path')
 			const servicesPaths = utils.getServicesNames().map(n => path.resolve(activeProjectPath, n))
-			const message = `The following directories will be deleted:\n\n${servicesPaths.join('\n')}\n\nAnd docker-compose configs will be cleared`
+
+			let message = `Docker-compose configs will be cleared (current project - ${chalk.green(projectName)})`
+			if (servicesPaths.length) {
+				message = `The following directories will be deleted:\n\n${servicesPaths.join('\n')}\n\nDocker-compose configs will be cleared (current project - ${chalk.green(projectName)})`
+			}
 			inquirer
 				.prompt({
 					type: 'confirm',
