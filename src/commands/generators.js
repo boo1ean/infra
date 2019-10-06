@@ -82,7 +82,7 @@ module.exports = yargs => {
 		)
 
 		.command(
-			['shared <name>', 's <name>', 'шареный <name>'],
+			['shared [name]', 's [name]', 'шареный [name]'],
 			'Create shared code directory',
 			_.noop,
 			argv => {
