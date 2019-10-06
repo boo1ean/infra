@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-const { spawn } = require('child_process')
 const Conf = require('conf')
 const path = require('path')
 const chalk = require('chalk')
@@ -7,6 +6,7 @@ const _ = require('lodash')
 const yargs = require('yargs')
 const execa = require('execa')
 const fuzzy = require('fuzzysearch')
+const open = require('open')
 const initialConfig = require('../src/initial-config')
 const projectsCommands = require('../src/commands/projects')
 const servicesCommands = require('../src/commands/services')
@@ -26,11 +26,11 @@ yargs
 	.usage('usage: $0 <command>')
 	.coerce('service', transformServiceArgument)
 	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
-	.command(['dev <service>', 'd <service>'], 'start service in dev mode', _.noop, startCommand)
 	.command(['cd [service]'], 'Go to service source code directory', _.noop, cdCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command(['generate', 'g'], 'generate services from templates', generatorsCommands)
+	.command(['open [service]', 'o [service]'], 'Open service in browser or somehow', openCommand)
 	.command(['migration <name>', 'm <name>'], 'create migration', _.noop, migrationsCommands)
 	.command('state', 'show infra current configuration', _.noop, renderConfig)
 	.command(
@@ -71,27 +71,38 @@ function useCommand (argv) {
 	console.log('Project path: %s', chalk.green(project.path))
 }
 
+function openCommand ({ service }) {
+	const { services } = utils.getCurrentEnvDockerComposeConfig()
+	if (service) {
+		const serviceConfig = services[service]
+		openService(service, serviceConfig)
+	} else {
+		for (const serviceName in services) {
+			const serviceConfig = services[serviceName]
+			openService(serviceName, serviceConfig)
+		}
+	}
+}
+
+async function openService (serviceName, serviceConfig) {
+	if (serviceConfig.ports) {
+		const hostPort = getHostPort(serviceConfig.ports)
+		const url = `http://localhost:${hostPort}`
+		await open(url)
+		console.log('Opened %s for %s', chalk.bold(url), chalk.green(serviceName))
+	} else {
+		console.log('No ports specified for %s, omitting...', chalk.green(serviceName))
+	}
+}
+
+function getHostPort (ports) {
+	return _.first(_.first(ports).split(':'))
+}
+
+
 function cdCommand (argv) {
 	const projectPath = conf.get('activeProject.path')
 	execa.shell(`cd ${projectPath}/${argv.service || ''} && $SHELL`, { stdio: 'inherit' })
-}
-
-async function startCommand ({ service }) {
-	const projectPath = conf.get('activeProject.path')
-	const { services } = utils.getDevDockerComposeConfig()
-	const serviceConfig = services[service]
-	if (!serviceConfig) {
-		return console.error(chalk.red('Service %s not found'), service)
-	}
-
-	const buildCommand = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml build --parallel`
-	await execa.shell(buildCommand, { stdio: 'inherit' })
-
-	const downCommand = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml down`
-	await execa.shell(downCommand, { stdio: 'inherit' })
-
-	const runCommand = `cd ${projectPath} && docker-compose -f dev.docker-compose.yml run --service-ports --rm --name ${serviceConfig.container_name} ${service}`
-	await execa.shell(runCommand, { stdio: 'inherit' })
 }
 
 function renderConfig () {
