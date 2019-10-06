@@ -30,7 +30,7 @@ yargs
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
 	.command(['generate', 'g'], 'generate services from templates', generatorsCommands)
-	.command(['open [service]', 'o [service]'], 'Open service in browser or somehow', openCommand)
+	.command(['open [service]', 'o [service]'], 'Open service in browser or somehow', _.noop, openCommand)
 	.command(['migration <name>', 'm <name>'], 'create migration', _.noop, migrationsCommands)
 	.command('state', 'show infra current configuration', _.noop, renderConfig)
 	.command(
