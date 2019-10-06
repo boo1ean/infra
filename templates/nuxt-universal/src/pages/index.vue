@@ -30,14 +30,13 @@ export default {
 	async asyncData ({ $axios }) {
 		try {
 			const res = await $axios.get('/api/items')
+			return {
+				items: res.data,
+			}
 		} catch (e) {
 			return {
 				items: ['this', 'is', 'not', 'from', 'api'],
 			}
-		}
-
-		return {
-			items: res.data,
 		}
 	}
 }
