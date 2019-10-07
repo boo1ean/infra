@@ -31,14 +31,17 @@ module.exports = yargs => {
 		.command(['logs [service]', 'l [service]'], 'show service logs', _.noop, ({ service }) => {
 			execa.shell(`cd ${projectPath} && docker-compose logs --tail 1000 -f ${service || ''}`, { stdio: 'inherit' })
 		})
-		.command(['down', 'd'], 'stop all services', _.noop, dockerComposeDown)
+		.command(['down [service]', 'd [service]'], 'stop all services', _.noop, dockerComposeDown)
 		.demandCommand()
 		.strict()
 		.help()
 }
 
-function dockerComposeDown () {
-	const cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} down`
+function dockerComposeDown ({ service }) {
+	let cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} down`
+	if (service) {
+		cmd = `cd ${projectPath} && docker-compose -f ${composeConfigFileName} stop ${service}`
+	}
 	return execa.shell(cmd, { stdio: 'inherit' })
 }
 
