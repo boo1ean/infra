@@ -28,8 +28,8 @@ module.exports = yargs => {
 			const connectCommand = _.get(serviceConfig, 'labels.["infra.connect"]', 'bash')
 			execa.shell(`cd ${projectPath} && docker-compose exec ${service} ${connectCommand}`, { stdio: 'inherit' })
 		})
-		.command(['logs <service>', 'l <service>'], 'show service logs', _.noop, ({ service }) => {
-			execa.shell(`cd ${projectPath} && docker-compose logs --tail 1000 -f ${service}`, { stdio: 'inherit' })
+		.command(['logs [service]', 'l [service]'], 'show service logs', _.noop, ({ service }) => {
+			execa.shell(`cd ${projectPath} && docker-compose logs --tail 1000 -f ${service || ''}`, { stdio: 'inherit' })
 		})
 		.command(['down', 'd'], 'stop all services', _.noop, dockerComposeDown)
 		.demandCommand()
