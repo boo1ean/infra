@@ -20,19 +20,6 @@ Complete infrastructure configuration is described in `{dev.}docker-compose.yml`
 - there is production service entry in system-wide `docker-compose.yml`
 - there is dev service entry in system-wide `dev.docker-compose.yml`
 
-## Types of services
-
-Types of services are defined by label `infra.type` in `docker-compose.yml` file.
-Available types are:
-
-- api
-- frontend
-- postgres
-
-Infra uses this meta information to generate some handy defaults.
-E.g. If you generate `api-workframe` and you already have postgres set service
-you will get `PG_HOST` initialized with name of postgres container.
-
 ## Shared codebase
 
 Shared codebase directories used to share code between different services 
@@ -49,20 +36,20 @@ it works like this:
 shared folders are not services and don't have dockerfiles and entries in docker-compose configs.
 
 ```
-usage: index.js <command>
+usage: infra <command>
 
 Commands:
-  index.js use <projectName>        set active project
-  index.js dev <service>            start service in dev mode       [aliases: d]
-  index.js cd [service]             Go to service source code directory
-  index.js project                  manage projects           [aliases: proj, p]
-  index.js service                  manage project services         [aliases: s]
-  index.js generate                 generate services from templates[aliases: g]
-  index.js work                     start workspace
-  index.js migration <name>         create migration                [aliases: m]
-  index.js state                    show infra current configuration
-  index.js set-value <key> <value>  manually set config value using dot notation
-  index.js reset-really-hard        reset infra configuration
+  infra use <projectName>        set active project
+  infra cd [service]             Go to service source code directory
+  infra project                  manage projects           [aliases: proj, p]
+  infra service                  manage project services         [aliases: s]
+  infra generate                 generate services from templates[aliases: g]
+  infra open [service]           Open service in browser or somehow
+                                                                    [aliases: o]
+  infra migration <name>         create migration                [aliases: m]
+  infra state                    show infra current configuration
+  infra set-value <key> <value>  manually set config value using dot notation
+  infra reset-really-hard        reset infra configuration
 
 Options:
   --version  Show version number                                       [boolean]
