@@ -29,7 +29,7 @@ module.exports = yargs => {
 			execa.shell(`cd ${projectPath} && docker-compose exec ${service} ${connectCommand}`, { stdio: 'inherit' })
 		})
 		.command(['logs [service]', 'l [service]'], 'show service logs', _.noop, ({ service }) => {
-			execa.shell(`cd ${projectPath} && docker-compose logs --tail 1000 -f ${service || ''}`, { stdio: 'inherit' })
+			execa.shell(`cd ${projectPath} && docker-compose -f ${composeConfigFileName} logs --tail 1000 -f ${service || ''}`, { stdio: 'inherit' })
 		})
 		.command(['down [service]', 'd [service]'], 'stop all services', _.noop, dockerComposeDown)
 		.demandCommand()
