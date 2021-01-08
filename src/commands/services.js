@@ -26,7 +26,7 @@ module.exports = yargs => {
 		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, ({ service }) => {
 			const serviceConfig = getServiceConfig(service)
 			const connectCommand = _.get(serviceConfig, 'labels.["infra.connect"]', 'bash')
-			execa.shell(`cd ${projectPath} && docker-compose exec ${service} ${connectCommand}`, { stdio: 'inherit' })
+			execa.shell(`cd ${projectPath} && docker-compose -f ${composeConfigFileName} exec ${service} ${connectCommand}`, { stdio: 'inherit' })
 		})
 		.command(['logs [service]', 'l [service]'], 'show service logs', _.noop, ({ service }) => {
 			execa.shell(`cd ${projectPath} && docker-compose -f ${composeConfigFileName} logs --tail 1000 -f ${service || ''}`, { stdio: 'inherit' })
