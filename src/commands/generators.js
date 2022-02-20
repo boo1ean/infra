@@ -9,14 +9,6 @@ const conf = new Conf()
 
 const COMPOSE_CONFIG_VERSION = 3.7
 
-const servicesTypes = {
-	POSTGRES: 'postgres',
-	MONGO: 'mongo',
-	API: 'api',
-	FRONTEND: 'frontend',
-	WORKER: 'worker',
-}
-
 let dockerComposeConfigPath
 let dockerComposeConfig
 let devDockerComposeConfigPath
@@ -53,27 +45,6 @@ const config = {
 
 module.exports = yargs => {
 	return yargs
-
-		.command(
-			['frontend <name>', 'front <name>', 'f <name>'],
-			'Create frontend app in active project',
-			_.noop,
-			createServiceFromTemplate('nuxt-universal', 'frontend', 4000))
-
-		.command(
-			['api <name>'],
-			'Create express app in active project',
-			_.noop,
-			createServiceFromTemplate('express-api', 'api', 3000)
-		)
-
-		.command(
-			['api-workframe <name>', 'api-wf <name>'],
-			'Create workframe-powered express app in active project',
-			_.noop,
-			createServiceFromTemplate('express-api-workframe', 'api', 3000)
-		)
-
 		.command(
 			['node <name>', 'n <name>', 'бандит <name>'],
 			'Create node app in active project',
@@ -101,151 +72,6 @@ module.exports = yargs => {
 				console.log('Under path: %s', chalk.bold(destPath))
 				scaffolder.generate('shared-code', destPath, templateParams)
 				console.log(chalk.green('Success!'))
-			}
-		)
-
-		.command(
-			['postgres [name]', 'pg [name]'],
-			'Create postgres service in active project',
-			_.noop,
-			argv => {
-				assertActiveProject()
-				const name = argv.name || 'postgres'
-				const serviceName = name
-				const destPath = path.resolve(
-					conf.get('activeProject.path'),
-					serviceName
-				)
-
-				const templateParams = {
-					serviceName,
-					sharedDirectories: [],
-					bareboneOnly: argv.barebone,
-				}
-
-				console.log('Generating service: %s', chalk.bold(serviceName))
-				console.log('Under path: %s', chalk.bold(destPath))
-				scaffolder.generate('postgres', destPath, templateParams)
-
-				const volumeName = `${serviceName}-data`
-
-				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig, {
-					build: {
-						context: `./`,
-						dockerfile: `${serviceName}/Dockerfile`,
-					},
-				})
-				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig, {
-					build: {
-						context: `./`,
-						dockerfile: `${serviceName}/dev.Dockerfile`,
-					},
-				})
-
-				console.log('Updated docker-compose.yml')
-				console.log(chalk.green('Success!'))
-
-				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig, extra = {}) {
-					if (!dockerComposeConfig.services) {
-						dockerComposeConfig.services = {}
-					}
-					dockerComposeConfig.services[serviceName] = {
-						restart: 'always',
-						environment: {
-							POSTGRES_USER: config.pg.default_user,
-							POSTGRES_PASSWORD: config.pg.default_password,
-							POSTGRES_DB: config.pg.default_db,
-						},
-						volumes: [
-							`${volumeName}:/var/lib/postgresql/data`,
-						],
-						labels: {
-							'infra.connect': `psql ${config.pg.default_db} ${config.pg.default_user}`,
-							'infra.type': 'postgres',
-						},
-					}
-
-					if (!dockerComposeConfig.volumes) {
-						dockerComposeConfig.volumes = {}
-					}
-					dockerComposeConfig.volumes[volumeName] = { driver: 'local' }
-					dockerComposeConfig.services[serviceName] = Object.assign(
-						dockerComposeConfig.services[serviceName],
-						extra
-					)
-					writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
-				}
-
-			}
-		)
-
-		.command(
-			['mongo [name]'],
-			'Create mongo service in active project',
-			_.noop,
-			argv => {
-				assertActiveProject()
-				const name = argv.name || 'mongo'
-				const serviceName = name
-				const destPath = path.resolve(
-					conf.get('activeProject.path'),
-					serviceName
-				)
-
-				const templateParams = {
-					serviceName,
-					sharedDirectories: [],
-					bareboneOnly: argv.barebone,
-				}
-
-				console.log('Generating service: %s', chalk.bold(serviceName))
-				console.log('Under path: %s', chalk.bold(destPath))
-				scaffolder.generate('mongo', destPath, templateParams)
-
-				const volumeName = `${serviceName}-data`
-
-				updateDockerCompose(dockerComposeConfigPath, dockerComposeConfig, {
-					build: {
-						context: `./`,
-						dockerfile: `${serviceName}/Dockerfile`,
-					},
-				})
-				updateDockerCompose(devDockerComposeConfigPath, devDockerComposeConfig, {
-					build: {
-						context: `./`,
-						dockerfile: `${serviceName}/dev.Dockerfile`,
-					},
-				})
-
-				console.log('Updated docker-compose.yml')
-				console.log(chalk.green('Success!'))
-
-				function updateDockerCompose (dockerComposeConfigPath, dockerComposeConfig, extra) {
-					if (!dockerComposeConfig.services) {
-						dockerComposeConfig.services = {}
-					}
-					dockerComposeConfig.services[serviceName] = {
-						restart: 'always',
-						volumes: [
-							`${volumeName}:/data/db`,
-						],
-						labels: {
-							'infra.connect': 'mongo',
-							'infra.type': servicesTypes.MONGO,
-						},
-					}
-
-					if (!dockerComposeConfig.volumes) {
-						dockerComposeConfig.volumes = {}
-					}
-					dockerComposeConfig.volumes[volumeName] = { driver: 'local' }
-					dockerComposeConfig.services[serviceName] = Object.assign(
-						dockerComposeConfig.services[serviceName],
-						extra
-					)
-					writeDockerComposeConfig(dockerComposeConfigPath, dockerComposeConfig)
-				}
-
 			}
 		)
 

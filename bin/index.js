@@ -3,7 +3,8 @@ const Conf = require('conf')
 const path = require('path')
 const chalk = require('chalk')
 const _ = require('lodash')
-const yargs = require('yargs')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
 const execa = require('execa')
 const fuzzy = require('fuzzysearch')
 const open = require('open')
@@ -22,8 +23,8 @@ if (!projects) {
 	conf.store = { ...initialConfig }
 }
 
-yargs
-	.usage('usage: $0 <command>')
+yargs(hideBin(process.argv))
+	.usage('usage: infra <command>')
 	.coerce('service', transformServiceArgument)
 	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
 	.command(['cd [service]'], 'Go to service source code directory', _.noop, cdCommand)
@@ -48,9 +49,12 @@ yargs
 	.demandCommand()
 	.strict()
 	.help()
-	.argv
+	.parse()
 
 function transformServiceArgument (service) {
+	if (!service) {
+		return service
+	}
 	const services = utils.getServicesNames()
 	if (services.includes(service)) {
 		return service
