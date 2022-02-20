@@ -35,7 +35,7 @@ module.exports = yargs => {
 
 		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, ({ service }) => {
 			const serviceConfig = getServiceConfig(service)
-			const connectCommand = _.get(serviceConfig, 'labels.["infra.connect"]', 'bash')
+			const connectCommand = _.get(serviceConfig, 'labels.["infra.connect"]', 'sh')
 			execa.shell(`${BASE_COMMAND} exec ${service} ${connectCommand}`, { stdio: 'inherit' })
 		})
 
