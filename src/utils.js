@@ -5,21 +5,16 @@ const fs = require('fs')
 
 const conf = new Conf()
 
+const DOCKER_COMPOSE_PROD = 'docker-compose.yml'
+const DOCKER_COMPOSE_DEV = 'dev.docker-compose.yml'
+
+const devDockerComposeExists = fs.existsSync(path.resolve(
+	conf.get('activeProject.path'),
+	DOCKER_COMPOSE_DEV,
+))
+
 function getServicesNames () {
 	return Object.keys(getCurrentEnvDockerComposeConfig().services || {})
-}
-
-function getDockerComposeConfig () {
-	return readYaml(path.resolve(
-		conf.get('activeProject.path'),
-		'docker-compose.yml'
-	))
-}
-function getDevDockerComposeConfig () {
-	return readYaml(path.resolve(
-		conf.get('activeProject.path'),
-		'dev.docker-compose.yml'
-	))
 }
 
 function getCurrentEnvDockerComposeConfig () {
@@ -30,10 +25,10 @@ function getCurrentEnvDockerComposeConfig () {
 }
 
 function getComposeFilename () {
-	if (['prod', 'production'].includes(process.env.NODE_ENV)) {
-		return 'docker-compose.yml'
+	if (!devDockerComposeExists || ['prod', 'production'].includes(process.env.NODE_ENV)) {
+		return DOCKER_COMPOSE_PROD
 	}
-	return 'dev.docker-compose.yml'
+	return DOCKER_COMPOSE_DEV
 }
 
 function readYaml (path) {
@@ -41,8 +36,6 @@ function readYaml (path) {
 }
 
 module.exports = {
-	getDockerComposeConfig,
-	getDevDockerComposeConfig,
 	getServicesNames,
 	getCurrentEnvDockerComposeConfig,
 	getComposeFilename,
