@@ -8,8 +8,9 @@ const conf = new Conf()
 const DOCKER_COMPOSE_PROD = 'docker-compose.yml'
 const DOCKER_COMPOSE_DEV = 'dev.docker-compose.yml'
 
-const devDockerComposeExists = fs.existsSync(path.resolve(
-	conf.get('activeProject.path'),
+const activeProjectPath = conf.get('activeProject.path')
+const devDockerComposeExists = activeProjectPath && fs.existsSync(path.resolve(
+	activeProjectPath,
 	DOCKER_COMPOSE_DEV,
 ))
 

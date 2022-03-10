@@ -13,7 +13,6 @@ const projectsCommands = require('../src/commands/projects')
 const servicesCommands = require('../src/commands/services')
 const migrationsCommands = require('../src/commands/migrations')
 //const generatorsCommands = require('../src/commands/generators')
-const utils = require('../src/utils')
 
 const conf = new Conf()
 const projects = conf.get('projects')
@@ -22,6 +21,9 @@ const projects = conf.get('projects')
 if (!projects) {
 	conf.store = { ...initialConfig }
 }
+
+const utils = require('../src/utils')
+
 
 yargs(hideBin(process.argv))
 	.usage('usage: infra <command>')
