@@ -2,11 +2,6 @@ const Conf = require('conf')
 const path = require('path')
 const chalk = require('chalk')
 const _ = require('lodash')
-const fs = require('fs')
-const inquirer = require('inquirer')
-const execa = require('execa')
-const utils = require('../utils')
-const scaffolder = require('../scaffolder')
 const conf = new Conf()
 
 module.exports = yargs => {
@@ -22,6 +17,7 @@ module.exports = yargs => {
 			})
 		})
 		.command('add <path>', 'add project', _.noop, addProject)
+		.command(['use <projectName>'], 'set active project', _.noop, useCommand)
 		.command(['remove <index>', 'rm <index>'], 'remove project', _.noop, argv => {
 			const projects = conf.get('projects')
 			if (!projects[argv.index]) {
@@ -29,53 +25,6 @@ module.exports = yargs => {
 			}
 			projects.splice(argv.index, 1)
 			conf.set('projects', projects)
-		})
-		.command(['init <projectName>'], 'initialize new project', _.noop, argv => {
-			const projectPath = path.resolve(process.cwd(), argv.projectName)
-
-			console.log('Generating project: %s', chalk.bold(argv.projectName))
-			console.log('Under path: %s', chalk.bold(projectPath))
-
-			if (fs.existsSync(projectPath)) {
-				console.error(chalk.red('ERROR: Directory %s already exists under path %s'), chalk.bold(argv.projectName), chalk.bold(projectPath))
-				process.exit(-1)
-			}
-
-			scaffolder.generate('empty-project', projectPath)
-
-			addProject({ path: projectPath })
-
-			const project = _.find(conf.get('projects'), { name: argv.projectName })
-			conf.set('activeProject', project)
-			console.log('Now using %s as active project', chalk.bold(project.name))
-			console.log('Project path: %s', chalk.green(project.path))
-
-		})
-		.command(['reset'], 'remove all project services and clear docker compose configs', _.noop, argv => {
-			const projectName = conf.get('activeProject.name')
-			const activeProjectPath = conf.get('activeProject.path')
-			const servicesPaths = utils.getServicesNames().map(n => path.resolve(activeProjectPath, n))
-
-			let message = `Docker-compose configs will be cleared (current project - ${chalk.green(projectName)})`
-			if (servicesPaths.length) {
-				message = `The following directories will be deleted:\n\n${servicesPaths.join('\n')}\n\nDocker-compose configs will be cleared (current project - ${chalk.green(projectName)})`
-			}
-			inquirer
-				.prompt({
-					type: 'confirm',
-					message,
-					name: 'shouldReset',
-					default: false,
-				})
-				.then(async ({ shouldReset }) => {
-					if (shouldReset) {
-						for (const serviceDirectoryPath of servicesPaths) {
-							await execa.shell(`rm -rf ${serviceDirectoryPath}`)
-							fs.writeFileSync(path.resolve(activeProjectPath, 'dev.docker-compose.yml'), 'version: "3.7"')
-							fs.writeFileSync(path.resolve(activeProjectPath, 'docker-compose.yml'), 'version: "3.7"')
-						}
-					}
-				});
 		})
 		.demandCommand()
 		.strict()
@@ -93,4 +42,18 @@ function addProject (argv) {
 
 	conf.set('projects', updatedProjects)
 	console.log(`Added project ${chalk.bold(chalk.green(projectName))}`)
+	useCommand({ projectName });
+}
+
+function useCommand (argv) {
+	const project = _.find(conf.get('projects'), { name: argv.projectName })
+
+	if (!project) {
+		console.error(chalk.red('Project %s doesn\'t exist'), chalk.bold(argv.projectName))
+		process.exit(1)
+	}
+
+	conf.set('activeProject', project)
+	console.log('Now using %s as active project', chalk.bold(project.name))
+	console.log('Project path: %s', chalk.green(project.path))
 }

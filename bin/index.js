@@ -11,8 +11,6 @@ const open = require('open')
 const initialConfig = require('../src/initial-config')
 const projectsCommands = require('../src/commands/projects')
 const servicesCommands = require('../src/commands/services')
-const migrationsCommands = require('../src/commands/migrations')
-//const generatorsCommands = require('../src/commands/generators')
 
 const conf = new Conf()
 const projects = conf.get('projects')
@@ -28,13 +26,10 @@ const utils = require('../src/utils')
 yargs(hideBin(process.argv))
 	.usage('usage: infra <command>')
 	.coerce('service', transformServiceArgument)
-	.command(['use <projectName>'], 'set active project', _.noop, useCommand)
 	.command(['cd [service]'], 'Go to service source code directory', _.noop, cdCommand)
 	.command(['project', 'proj', 'p'], 'manage projects', projectsCommands)
 	.command(['service', 's'], 'manage project services', servicesCommands)
-	//.command(['generate', 'g'], 'generate services from templates', generatorsCommands)
-	.command(['open [service]', 'o [service]'], 'Open service in browser or somehow', _.noop, openCommand)
-	.command(['migration <name>', 'm <name>'], 'create migration', _.noop, migrationsCommands)
+	.command(['open [service]', 'o [service]'], 'Open service in browser', _.noop, openCommand)
 	.command('state', 'show infra current configuration', _.noop, renderConfig)
 	.command(
 		'set-value <key> <value>',
@@ -62,19 +57,6 @@ function transformServiceArgument (service) {
 		return service
 	}
 	return _.first(services.filter(fuzzy.bind(null, service))) || service
-}
-
-function useCommand (argv) {
-	const project = _.find(conf.get('projects'), { name: argv.projectName })
-
-	if (!project) {
-		console.error(chalk.red('Project %s doesn\'t exist'), chalk.bold(argv.projectName))
-		process.exit(1)
-	}
-
-	conf.set('activeProject', project)
-	console.log('Now using %s as active project', chalk.bold(project.name))
-	console.log('Project path: %s', chalk.green(project.path))
 }
 
 function openCommand ({ service }) {
