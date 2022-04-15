@@ -22,7 +22,6 @@ if (!projects) {
 
 const utils = require('../src/utils')
 
-
 yargs(hideBin(process.argv))
 	.usage('usage: infra <command>')
 	.coerce('service', transformServiceArgument)
@@ -86,7 +85,6 @@ async function openService (serviceName, serviceConfig) {
 function getHostPort (ports) {
 	return _.first(_.first(ports).split(':'))
 }
-
 
 function cdCommand (argv) {
 	const projectPath = conf.get('activeProject.path')

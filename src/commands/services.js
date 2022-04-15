@@ -19,19 +19,9 @@ module.exports = yargs => {
 			services.forEach(s => console.log(chalk.magenta(s)))
 		})
 
-		.command(['start <service>', 's <service>'], 'start service', _.noop, async ({ service }) => {
-			const cmd = `${BASE_COMMAND} up --build -d ${service}`
-			execa.shell(cmd, { stdio: 'inherit' })
-		})
-
-		.command(['restart <service>', 'r <service>'], 'restart service', _.noop, async ({ service, v }) => {
-			await dockerComposeDown(service)
-			if (v) {
-				await removeVolumes(service)
-			}
-			const cmd = `${BASE_COMMAND} start ${service}`
-			execa.shell(cmd, { stdio: 'inherit' })
-		})
+		.command(['start <service>', 's <service>'], 'start service', _.noop, startService)
+		.alias('l', 'logs')
+		.describe('l', 'Attach to service logs')
 
 		.command(['connect <service>', 'c <service>'], 'connect to service', _.noop, ({ service }) => {
 			const serviceConfig = getServiceConfig(service)
@@ -42,20 +32,21 @@ module.exports = yargs => {
 		.command(['logs [service]', 'l [service]'], 'show service logs', _.noop, ({ service }) => attachToLogs(service))
 
 		.command(['down [service]', 'd [service]'], 'stop all services', _.noop, ({ service }) => dockerComposeDown(service))
-		.alias('v', 'remove-volumes')
-		.describe('v', 'Remove service related volumes')
 		.demandCommand()
 		.strict()
 		.help()
 }
 
+async function startService ({ service, l }) {
+	const cmd = `${BASE_COMMAND} up --build -d ${service}`
+	await execa.shell(cmd, { stdio: 'inherit' })
+	if (l) {
+		await attachToLogs(service)
+	}
+}
+
 async function dockerComposeDown (service) {
 	let cmd = `${BASE_COMMAND} down`
-
-	if (service) {
-		cmd = `${BASE_COMMAND} stop ${service}`
-	}
-
 	return execa.shell(cmd, { stdio: 'inherit' })
 }
 
